@@ -1,7 +1,7 @@
 import typing
 import inspect
 
-from fundi.types import R, CallableInfo, Parameter
+from fundi.types import R, CallableInfo, Parameter, TypeResolver
 
 
 def scan(call: typing.Callable[..., R]) -> CallableInfo[R]:
@@ -19,13 +19,18 @@ def scan(call: typing.Callable[..., R]) -> CallableInfo[R]:
 
         has_default = param.default is not inspect.Parameter.empty
 
+        annotation: type = param.annotation
+        if isinstance(annotation, TypeResolver):
+            annotation = annotation.annotation
+
         params.append(
             Parameter(
                 param.name,
-                param.annotation,
+                annotation,
                 from_=None,
                 default=param.default if has_default else None,
                 has_default=has_default,
+                resolve_by_type=isinstance(param.annotation, TypeResolver),
             )
         )
 

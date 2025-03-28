@@ -65,6 +65,32 @@ asyncio.run(main())
 ```
 
 
+### Resolve dependencies by type
+> It's simple! Use `from_` on type annotation
+
+```python
+from contextlib import ExitStack
+
+from fundi import from_, inject, scan
+
+class Session:
+    """Database session"""
+
+def require_user(_: from_(Session)) -> str:
+    return "user"
+
+
+def application(session: from_(Session), user: str = from_(require_user)):
+    print(f"Application started with {user = }")
+    print(f"{session = }")
+
+
+with ExitStack() as stack:
+    inject({"db": Session()}, scan(application), stack)
+```
+> Note: while resolving dependencies by type parameter names doesn't really matter.
+
+
 ### Utilities
 
 - `fundi.order` - returns order in which dependencies will be resolved
