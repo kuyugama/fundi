@@ -1,4 +1,4 @@
-### # _FunDI_
+# # _FunDI_
 > Solution for problem no one had before
 
 > Fun stays for function(or for fun if you wish) and DI for Dependency Injection
