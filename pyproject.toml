@@ -1,0 +1,29 @@
+[project]
+name = "fundi"
+version = "0.0.1"
+description = "Dependency injection library"
+requires-python = ">=3.10"
+readme = "README.md"
+dependencies = []
+license-files = ["LICENSE", "LICENSE.md"]
+
+[dependency-groups]
+dev = [
+    "black>=25.1.0",
+    "pytest>=8.3.5",
+    "pytest-asyncio>=0.26.0",
+]
+
+[tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib"
+]
+pythonpath = ["."]
+python_functions = "test_*"
+python_files = "test_*.py"
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope="session"
+filterwarnings = [
+    "ignore::DeprecationWarning"
+]
+
