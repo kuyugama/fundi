@@ -67,5 +67,5 @@ asyncio.run(main())
 
 ### Utilities
 
-- `fastdi.order` - returns order in which dependencies will be resolved
-- `fastdi.tree` - returns dependency resolving tree
+- `fundi.order` - returns order in which dependencies will be resolved
+- `fundi.tree` - returns dependency resolving tree
