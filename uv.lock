@@ -66,8 +66,8 @@ wheels = [
 ]
 
 [[package]]
-name = "fastdi"
-version = "0.0.1"
+name = "fundi"
+version = "0.0.2"
 source = { virtual = "." }
 
 [package.dev-dependencies]
