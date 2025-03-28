@@ -29,7 +29,7 @@ def application(user: str = from_(require_user), session: str = from_(require_da
 
 
 with ExitStack() as stack:
-    inject({"session_url": "postgresql://kuyugama:insecurepassword@localhost:5432/database"}, scan(application), stack)
+    inject({"database_url": "postgresql://kuyugama:insecurepassword@localhost:5432/database"}, scan(application), stack)
 ```
 
 ### Async? YES!!!
@@ -57,8 +57,8 @@ async def application(user: str = from_(require_user), session: str = from_(requ
 
 
 async def main():
-    with AsyncExitStack() as stack:
-        await ainject({"session_url": "postgresql://kuyugama:insecurepassword@localhost:5432/database"}, scan(application), stack)
+    async with AsyncExitStack() as stack:
+        await ainject({"database_url": "postgresql://kuyugama:insecurepassword@localhost:5432/database"}, scan(application), stack)
 
 
 asyncio.run(main())
