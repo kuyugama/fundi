@@ -88,7 +88,7 @@ def application(session: from_(Session), user: str = from_(require_user)):
 with ExitStack() as stack:
     inject({"db": Session()}, scan(application), stack)
 ```
-> Note: while resolving dependencies by type parameter names doesn't really matter.
+> Note: while resolving dependencies by type - parameter names doesn't really matter.
 
 
 ### Utilities
