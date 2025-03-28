@@ -1,6 +1,6 @@
 import typing
 
-from fastdi.types import CallableInfo, ParameterResult
+from fundi.types import CallableInfo, ParameterResult
 
 
 def resolve(

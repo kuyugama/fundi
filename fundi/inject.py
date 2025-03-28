@@ -1,9 +1,9 @@
 import typing
 from contextlib import ExitStack, AsyncExitStack
 
-from fastdi.resolve import resolve
-from fastdi.types import CallableInfo
-from fastdi.util import _call_sync, _call_async
+from fundi.resolve import resolve
+from fundi.types import CallableInfo
+from fundi.util import _call_sync, _call_async
 
 
 def inject(

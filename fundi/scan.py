@@ -1,7 +1,7 @@
 import typing
 import inspect
 
-from fastdi.types import R, CallableInfo, Parameter
+from fundi.types import R, CallableInfo, Parameter
 
 
 def scan(call: typing.Callable[..., R]) -> CallableInfo[R]:

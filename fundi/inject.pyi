@@ -2,7 +2,7 @@ import typing
 from typing import overload
 from contextlib import ExitStack, AsyncExitStack
 
-from fastdi.types import CallableInfo
+from fundi.types import CallableInfo
 
 R = typing.TypeVar("R")
 

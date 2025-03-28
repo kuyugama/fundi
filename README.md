@@ -37,8 +37,8 @@ with ExitStack() as stack:
 
 ```python
 import asyncio
-from typing import AsyncGenerator, Any
 from contextlib import AsyncExitStack
+from typing import AsyncGenerator, Any
 
 from fundi import from_, ainject, scan
 
