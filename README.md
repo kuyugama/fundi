@@ -3,7 +3,7 @@
 
 > Fun stays for function(or for fun if you wish) and DI for Dependency Injection
 
-This library provides fast(to write!) dependency injection and convenient(to use!) Dependency Injection 
+This library provides fast(to write!) and convenient(to use!) Dependency Injection 
 for functional programming on python.
 
 ### No more words, let's try!
