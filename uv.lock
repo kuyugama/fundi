@@ -67,7 +67,7 @@ wheels = [
 
 [[package]]
 name = "fundi"
-version = "0.0.2"
+version = "0.0.4"
 source = { virtual = "." }
 
 [package.dev-dependencies]
