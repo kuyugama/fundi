@@ -11,6 +11,8 @@ class Parameter:
     name: str
     annotation: type
     from_: "CallableInfo | None"
+    default: typing.Any = None
+    has_default: bool = False
 
 
 @dataclass

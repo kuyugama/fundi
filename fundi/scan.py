@@ -14,10 +14,20 @@ def scan(call: typing.Callable[..., R]) -> CallableInfo[R]:
 
     for param in inspect.signature(call).parameters.values():
         if isinstance(param.default, CallableInfo):
-            params.append(Parameter(param.name, param.annotation, param.default))
+            params.append(Parameter(param.name, param.annotation, from_=param.default))
             continue
 
-        params.append(Parameter(param.name, param.annotation, None))
+        has_default = param.default is not inspect.Parameter.empty
+
+        params.append(
+            Parameter(
+                param.name,
+                param.annotation,
+                from_=None,
+                default=param.default if has_default else None,
+                has_default=has_default,
+            )
+        )
 
     async_ = inspect.iscoroutinefunction(call) or inspect.isasyncgenfunction(call)
     generator = inspect.isgeneratorfunction(call) or inspect.isasyncgenfunction(call)

@@ -1,3 +1,4 @@
+import inspect
 import typing
 
 from fundi.types import CallableInfo, ParameterResult
@@ -42,9 +43,18 @@ def resolve(
                 yield ParameterResult(parameter.name, cache[call], dependency, resolved=True)
             else:
                 yield ParameterResult(parameter.name, None, dependency, resolved=False)
-        else:
-            if parameter.name not in scope:
-                raise ValueError(
-                    f"Cannot resolve {parameter.name} for {info.call} - Scope does not contain required value"
-                )
+
+            continue
+
+        if parameter.name in scope:
             yield ParameterResult(parameter.name, scope[parameter.name], None, resolved=True)
+            continue
+
+        if parameter.has_default:
+            yield ParameterResult(parameter.name, parameter.default, None, resolved=True)
+            continue
+
+        module = inspect.getmodule(info.call).__name__
+        raise ValueError(
+            f"Cannot resolve {parameter.name} for {info.call} from {module} - Scope does not contain required value"
+        )
