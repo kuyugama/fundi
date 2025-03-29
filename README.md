@@ -6,6 +6,16 @@
 This library provides fast(to write!) and convenient(to use!) Dependency Injection 
 for functional programming on python.
 
+### Why?  
+
+This library was inspired by FastAPI's dependency injection. The reasons for its existence are simple:  
+
+- **A standalone dependency injection library.** DI shouldn't be tied to a specific framework.  
+- **It simplifies code writing.** Dependency injection reduces boilerplate and improves maintainability.  
+- **Lack of DI libraries for functional programming in Python.** Or maybe I just didn't want to find one :3  
+
+Let me know if you'd like any tweaks! 😃
+
 ### No more words, let's try!
 
 ```python
@@ -63,7 +73,6 @@ async def main():
 
 asyncio.run(main())
 ```
-
 
 ### Resolve dependencies by type
 > It's simple! Use `from_` on type annotation
