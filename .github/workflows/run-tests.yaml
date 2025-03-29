@@ -7,7 +7,7 @@ permissions:
 
 jobs:
   tests:
-    name: "Tests on python 3.13"
+    name: "Tests on python ${{matrix.python-version}}"
     runs-on: ubuntu-latest
 
     strategy:
