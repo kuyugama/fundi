@@ -69,7 +69,7 @@ async def _call_async(
 def tree(
     scope: typing.Mapping[str, typing.Any],
     info: CallableInfo,
-    cache: typing.Mapping[typing.Callable, typing.Mapping[str, typing.Any]] = None,
+    cache: typing.MutableMapping[typing.Callable, typing.Mapping[str, typing.Any]] | None = None,
 ) -> typing.Mapping[str, typing.Any]:
     """
     Get tree of dependencies of callable.
@@ -89,6 +89,7 @@ def tree(
         value = result.value
 
         if not result.resolved:
+            assert result.dependency is not None
             value = tree(scope, result.dependency, cache)
             cache[result.dependency.call] = value
 
@@ -100,7 +101,7 @@ def tree(
 def order(
     scope: typing.Mapping[str, typing.Any],
     info: CallableInfo[typing.Any],
-    cache: typing.Mapping[typing.Callable, list[typing.Callable]] = None,
+    cache: typing.MutableMapping[typing.Callable, list[typing.Callable]] | None = None,
 ) -> list[typing.Callable]:
     """
     Get resolving order of callable dependencies.
@@ -117,6 +118,8 @@ def order(
 
     for result in resolve(scope, info, cache):
         if not result.resolved:
+            assert result.dependency is not None
+
             value = order(scope, result.dependency, cache)
             order_.extend(value)
             order_.append(result.dependency.call)
