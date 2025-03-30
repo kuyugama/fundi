@@ -14,8 +14,6 @@ This library was inspired by FastAPI's dependency injection. The reasons for its
 - **It simplifies code writing.** Dependency injection reduces boilerplate and improves maintainability.  
 - **Lack of DI libraries for functional programming in Python.** Or maybe I just didn't want to find one :3  
 
-Let me know if you'd like any tweaks! 😃
-
 ### No more words, let's try!
 
 ```python
