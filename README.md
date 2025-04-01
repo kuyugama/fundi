@@ -73,7 +73,6 @@ async def main():
 
 asyncio.run(main())
 ```
-
 ### Resolve dependencies by type
 > It's simple! Use `from_` on type annotation
 
@@ -98,6 +97,31 @@ with ExitStack() as stack:
     inject({"db": Session()}, scan(application), stack)
 ```
 > Note: while resolving dependencies by type - parameter names doesn't really matter.
+
+### Overriding dependency results
+> As simple, as injecting!
+```python
+import time
+import random
+from contextlib import ExitStack
+
+from fundi import from_, inject, scan
+
+
+def require_random_animal() -> str:
+    time.sleep(3)  # simulate web request
+
+    return random.choice(["cat", "dog", "chicken", "horse", "platypus", "cow"])
+
+
+def application(animal: str = from_(require_random_animal)):
+    print("Animal:", animal)
+
+
+with ExitStack() as stack:
+    inject({}, scan(application), stack, override={require_random_animal: "dog"})
+```
+
 
 
 ### Utilities

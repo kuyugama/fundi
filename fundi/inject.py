@@ -11,6 +11,7 @@ def inject(
     info: CallableInfo[typing.Any],
     stack: ExitStack,
     cache: typing.Mapping[typing.Callable, typing.Any] = None,
+    override: typing.Mapping[typing.Callable, typing.Any] = None,
 ) -> typing.Any:
     """
     Synchronously inject dependencies into callable.
@@ -19,6 +20,7 @@ def inject(
     :param info: callable information
     :param stack: exit stack to properly handle generator dependencies
     :param cache: dependency cache
+    :param override: override dependencies
     :return: result of callable
     """
     if info.async_:
@@ -29,14 +31,14 @@ def inject(
 
     values = {}
 
-    for result in resolve(scope, info, cache):
+    for result in resolve(scope, info, cache, override):
         name = result.parameter_name
         value = result.value
 
         if not result.resolved:
             dependency = result.dependency
 
-            value = inject(scope, dependency, stack, cache)
+            value = inject(scope, dependency, stack, cache, override)
             cache[dependency.call] = value
 
         values[name] = value
@@ -49,6 +51,7 @@ async def ainject(
     info: CallableInfo[typing.Any],
     stack: AsyncExitStack,
     cache: typing.Mapping[typing.Callable, typing.Any] = None,
+    override: typing.Mapping[typing.Callable, typing.Any] = None,
 ) -> typing.Any:
     """
     Asynchronously inject dependencies into callable.
@@ -57,6 +60,7 @@ async def ainject(
     :param info: callable information
     :param stack: exit stack to properly handle generator dependencies
     :param cache: dependency cache
+    :param override: override dependencies
     :return: result of callable
     """
     if cache is None:
@@ -64,14 +68,14 @@ async def ainject(
 
     values = {}
 
-    for result in resolve(scope, info, cache):
+    for result in resolve(scope, info, cache, override):
         name = result.parameter_name
         value = result.value
 
         if not result.resolved:
             dependency = result.dependency
 
-            value = await ainject(scope, dependency, stack, cache)
+            value = await ainject(scope, dependency, stack, cache, override)
             cache[dependency.call] = value
 
         values[name] = value
