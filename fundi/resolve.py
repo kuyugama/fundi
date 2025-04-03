@@ -5,9 +5,12 @@ from fundi.types import CallableInfo, ParameterResult
 
 
 def resolve_by_dependency(
-    name: str, dependency: CallableInfo, cache: typing.Mapping[typing.Callable, typing.Any]
+    name: str, dependency: CallableInfo, cache: typing.Mapping[typing.Callable, typing.Any], override: typing.Mapping[typing.Callable, typing.Any]
 ) -> ParameterResult:
     call = dependency.call
+
+    if call in override:
+        return ParameterResult(name, override[call], dependency, resolved=True)
 
     if call in cache:
         return ParameterResult(name, cache[call], dependency, resolved=True)
@@ -39,6 +42,7 @@ def resolve(
     scope: typing.Mapping[str, typing.Any],
     info: CallableInfo,
     cache: typing.Mapping[typing.Callable, typing.Any],
+    override: typing.Mapping[typing.Callable, typing.Any] = None,
 ) -> typing.Generator[ParameterResult, None, None]:
     """
     Try to resolve values from cache or scope for callable parameters
@@ -63,13 +67,17 @@ def resolve(
     :param scope: container with contextual values
     :param info: callable information
     :param cache: solvation cache(modify it if necessary while resolving)
+    :param override: override dependencies
     :return: generator with solvation results
     """
+    if override is None:
+        override = {}
+
     module = inspect.getmodule(info.call)
     module_name = module.__name__ if module else "<unknown module>"
     for parameter in info.parameters:
         if parameter.from_:
-            yield resolve_by_dependency(parameter.name, parameter.from_, cache)
+            yield resolve_by_dependency(parameter.name, parameter.from_, cache, override)
             continue
 
         if parameter.resolve_by_type:
