@@ -6,7 +6,7 @@
 This library provides fast(to write!) and convenient(to use!) Dependency Injection 
 for functional programming on python.
 
-### Why?  
+## Why?  
 
 This library was inspired by FastAPI's dependency injection. The reasons for its existence are simple:  
 
@@ -16,7 +16,81 @@ This library was inspired by FastAPI's dependency injection. The reasons for its
 
 Let me know if you'd like any tweaks! 😃
 
-### No more words, let's try!
+
+## How?
+
+### Main definitions
+- Scope - dependency injection scope (list of root values that will be set to 
+parameters without dependency function)
+    
+  Example:
+  ```python
+  from contextlib import ExitStack
+  
+  from fundi import inject, scan
+  
+  def dependant(value: str):
+      print(value)
+  
+  
+  with ExitStack() as stack:
+    inject({"value": "Value that will be passed to dependency"}, scan(dependant), stack)
+  ```
+- Dependant - Function that has dependencies (either function, or scope dependencies)
+
+  Example:
+  ```python
+  from contextlib import ExitStack
+  
+  from fundi import from_, inject, scan
+  
+  class Session:
+      pass
+  
+  
+  def string() -> str:
+      return "string from dependency"
+  
+  
+  def dependant(session: from_(Session), scope_value: str, dependency_value: str = from_(string)):
+      pass
+  
+  
+  with ExitStack() as stack:
+      inject({"scope_value": "string from scope", "session": Session()}, scan(dependant), stack)
+  ```
+- Dependency - Function that is used to resolve dependant's parameter value. 
+  Dependency can have its own dependencies.
+
+  Example:
+  ```python
+  from contextlib import ExitStack
+  
+  from fundi import from_, inject, scan
+  
+  class Session:
+      pass
+  
+  
+  def string() -> str:
+      return "string from dependency"
+  
+  
+  def dependency(session: from_(Session), scope_value: str, dependency_value: str = from_(string)):
+      pass
+  
+  
+  def dependant(value: None = from_(dependency)):
+      pass
+  
+  
+  with ExitStack() as stack:
+      inject({"scope_value": "string from scope", "session": Session()}, scan(dependant), stack)
+  ```
+
+## No more words, let's try!
+
+### Sync
 
 ```python
 from contextlib import ExitStack
@@ -42,7 +116,7 @@ with ExitStack() as stack:
     inject({"database_url": "postgresql://kuyugama:insecurepassword@localhost:5432/database"}, scan(application), stack)
 ```
 
-### Async? YES!!!
+### Async
 
 
 ```python
@@ -74,7 +148,7 @@ async def main():
 asyncio.run(main())
 ```
 
-### Resolve dependencies by type
+### Resolve scope dependencies by type
 > It's simple! Use `from_` on type annotation
 
 ```python
@@ -100,7 +174,15 @@ with ExitStack() as stack:
 > Note: while resolving dependencies by type - parameter names doesn't really matter.
 
 
-### Utilities
+### Component explanation:
+- `fundi.from_` - Helps define dependencies.
 
+  Use cases:
+    - Tell resolver to resolve parameter value by its type, not name (ex: `parameter: from_(Session)`)
+    - Define dependency (ex: `parameter: type = from_(dependency)`).
+
+      In this case it can be replaced with `fundi.scan.scan` (ex: `parameter: type = scan(dependency)`)
+- `fundi.scan` - Scans function for dependencies. Returns `CallableInfo` object that is 
+  used by all functions that resolve dependencies.
 - `fundi.order` - returns order in which dependencies will be resolved
 - `fundi.tree` - returns dependency resolving tree
