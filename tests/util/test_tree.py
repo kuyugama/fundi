@@ -40,5 +40,5 @@ async def test_tree():
                 "call": require_database_session,
                 "values": {"database_url": "postgresql://user:password@localhost:5432/database"},
             }
-        }
+        },
     }

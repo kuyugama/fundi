@@ -5,12 +5,19 @@ from fundi.types import CallableInfo, ParameterResult
 
 
 def resolve_by_dependency(
-    name: str, dependency: CallableInfo, cache: typing.Mapping[typing.Callable, typing.Any], override: typing.Mapping[typing.Callable, typing.Any]
+    name: str,
+    dependency: CallableInfo,
+    cache: typing.Mapping[typing.Callable, typing.Any],
+    override: typing.Mapping[typing.Callable, typing.Any],
 ) -> ParameterResult:
     call = dependency.call
 
     if call in override:
-        return ParameterResult(name, override[call], dependency, resolved=True)
+        value = override[call]
+        if isinstance(value, CallableInfo):
+            return ParameterResult(name, None, value, resolved=False)
+
+        return ParameterResult(name, value, dependency, resolved=True)
 
     if call in cache:
         return ParameterResult(name, cache[call], dependency, resolved=True)

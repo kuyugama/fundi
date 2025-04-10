@@ -14,6 +14,7 @@ class TypeResolver:
     This changes logic of ``fundi.resolve.resolve``, so it uses ``Parameter.annotation``
     to find value in scope instead of ``Parameter.name``
     """
+
     annotation: type
 
 
