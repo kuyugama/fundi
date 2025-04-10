@@ -196,6 +196,40 @@ with ExitStack() as stack:
 ```
 
 
+### Overriding dependencies
+> As easy as say "Kuyugama is the best"!
+
+```python
+import time
+import random
+from contextlib import ExitStack
+
+from fundi import from_, inject, scan
+
+
+def require_random_animal() -> str:
+    time.sleep(3)  # simulate web request
+
+    return random.choice(["cat", "dog", "chicken", "horse", "platypus", "cow"])
+
+
+def test_require_animal(animal: str) -> str:
+    return animal
+
+
+def application(animal: str = from_(require_random_animal)):
+    print("Animal:", animal)
+
+
+with ExitStack() as stack:
+    inject(
+        {"animal": "cockroach"},
+        scan(application),
+        stack,
+        override={require_random_animal: scan(test_require_animal)}
+    )
+```
+
 
 ### Component explanation:
 - `fundi.from_` - Helps define dependencies.
