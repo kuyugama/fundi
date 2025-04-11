@@ -49,7 +49,7 @@ def resolve(
     scope: typing.Mapping[str, typing.Any],
     info: CallableInfo,
     cache: typing.Mapping[typing.Callable, typing.Any],
-    override: typing.Mapping[typing.Callable, typing.Any] = None,
+    override: typing.Mapping[typing.Callable, typing.Any] | None = None,
 ) -> typing.Generator[ParameterResult, None, None]:
     """
     Try to resolve values from cache or scope for callable parameters

@@ -1,11 +1,17 @@
 import typing
 from typing import overload
 
-from fundi.types import CallableInfo
-
-T = typing.TypeVar("T")
+T = typing.TypeVar("T", bound=type)
+R = typing.TypeVar("R")
 
 @overload
-def from_(dependency: type[T]) -> type[T]: ...  # type: ignore
+def from_(dependency: T) -> T: ...
 @overload
-def from_(dependency: typing.Callable[..., typing.Any]) -> CallableInfo: ...
+def from_(dependency: typing.Callable[..., typing.Generator[R, None, None]]) -> R: ...
+@overload
+def from_(dependency: typing.Callable[..., typing.AsyncGenerator[R, None]]) -> R: ...
+@overload
+def from_(dependency: typing.Callable[..., typing.Awaitable[R]]) -> R: ...
+@overload
+def from_(dependency: typing.Callable[..., R]) -> R: ...
+
