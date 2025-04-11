@@ -74,9 +74,7 @@ def test_resolve_by_type():
 def test_override_result():
     def dep(): ...
 
-
     def func(arg: int = from_(dep)): ...
-
 
     for result in resolve({}, scan(func), {}, override={dep: 2}):
         assert result.parameter_name == "arg"
@@ -87,12 +85,9 @@ def test_override_result():
 def test_override_dependency():
     def dep(): ...
 
-
     def test_dep(): ...
 
-
     def func(arg: int = from_(dep)): ...
-
 
     for result in resolve({}, scan(func), {}, override={dep: scan(test_dep)}):
         assert result.parameter_name == "arg"
