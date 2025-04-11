@@ -41,6 +41,7 @@ html_theme_options = {
     "fixed_sidebar": True,
     "github_banner": True,
     "github_button": False,
+    "logo": "FunDI.png",
     "extra_nav_links": {
         "Overview": "index.html",
         "Installation": "installation.html",
