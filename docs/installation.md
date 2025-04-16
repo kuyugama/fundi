@@ -1,6 +1,5 @@
 # Installation
 
----
 ## Pip
 ```bash
 pip install fundi
