@@ -22,7 +22,10 @@ release = "0.0.8"
 extensions = [
     "myst_parser",
     "sphinx.ext.autodoc",
+    "sphinx.ext.viewcode",
+    "sphinx_copybutton",
     "sphinx.ext.napoleon",
+    "sphinx.ext.autodoc",
 ]
 
 templates_path = ["_templates"]
@@ -31,25 +34,22 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = "alabaster"
+html_theme = "furo"
 html_static_path = ["_static"]
-html_sidebars = {"**": ["about.html", "navigation.html", "searchbox.html"]}
+html_sidebars = {
+    "**": [
+        "sidebar/scroll-start.html",
+        "sidebar/brand.html",
+        "sidebar/search.html",
+        "sidebar/navigation.html",
+        "sidebar/scroll-end.html",
+    ]
+}
+html_logo = "_static/FunDI.png"
 html_theme_options = {
-    "github_user": "kuyugama",
-    "github_repo": "fundi",
-    "github_type": "star",
-    "fixed_sidebar": True,
-    "github_banner": True,
-    "github_button": False,
-    "logo": "FunDI.png",
-    "extra_nav_links": {
-        "Overview": "index.html",
-        "Installation": "installation.html",
-        "Basic Usage": "usage.html",
-        "Advanced Usage": "advanced.html",
-        "Testing": "testing.html",
-        "API Reference": "api.html",
-    },
+    "source_repository": "https://github.com/kuyugama/fundi",
+    "source_branch": "main",
+    "source_directory": "docs/",
 }
 
 myst_enable_extensions = ["colon_fence"]

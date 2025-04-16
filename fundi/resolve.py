@@ -54,9 +54,7 @@ def resolve(
     """
     Try to resolve values from cache or scope for callable parameters
 
-    Recommended use case:
-
-    Example::
+    Recommended use case::
 
         values = {}
         cache = {}

@@ -7,7 +7,9 @@ from fundi.types import R, CallableInfo, Parameter, TypeResolver
 def scan(call: typing.Callable[..., R]) -> CallableInfo[R]:
     """
     Get callable information
+
     :param call: callable to get information from
+
     :return: callable information
     """
     params = []
