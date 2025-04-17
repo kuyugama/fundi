@@ -29,6 +29,7 @@ for functional programming. It helps inject dependencies in simple and declarati
 .. toctree::
     :maxdepth: 2
 
+    comparison
     installation
     usage
     advanced
