@@ -31,6 +31,7 @@ for functional programming. It helps inject dependencies in simple and declarati
 
     comparison
     installation
+    howtos/index
     usage
     advanced
     testing
