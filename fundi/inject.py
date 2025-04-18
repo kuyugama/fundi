@@ -39,7 +39,9 @@ def inject(
             dependency = result.dependency
 
             value = inject(scope, dependency, stack, cache, override)
-            cache[dependency.call] = value
+
+            if dependency.use_cache:
+                cache[dependency.call] = value
 
         values[name] = value
 
@@ -76,7 +78,9 @@ async def ainject(
             dependency = result.dependency
 
             value = await ainject(scope, dependency, stack, cache, override)
-            cache[dependency.call] = value
+
+            if dependency.use_cache:
+                cache[dependency.call] = value
 
         values[name] = value
 

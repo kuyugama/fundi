@@ -91,7 +91,9 @@ def tree(
         if not result.resolved:
             assert result.dependency is not None
             value = tree(scope, result.dependency, cache)
-            cache[result.dependency.call] = value
+
+            if result.dependency.use_cache:
+                cache[result.dependency.call] = value
 
         values[name] = value
 
@@ -123,6 +125,8 @@ def order(
             value = order(scope, result.dependency, cache)
             order_.extend(value)
             order_.append(result.dependency.call)
-            cache[result.dependency.call] = value
+
+            if result.dependency.use_cache:
+                cache[result.dependency.call] = value
 
     return order_

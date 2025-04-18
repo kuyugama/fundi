@@ -19,7 +19,7 @@ def resolve_by_dependency(
 
         return ParameterResult(name, value, dependency, resolved=True)
 
-    if call in cache:
+    if dependency.use_cache and call in cache:
         return ParameterResult(name, cache[call], dependency, resolved=True)
 
     return ParameterResult(name, None, dependency, resolved=False)
