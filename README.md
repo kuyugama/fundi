@@ -36,16 +36,3 @@ with ExitStack() as stack:
 ```
 
 See the documentation to get more examples: https://fundi.readthedocs.io/en/latest/
-
-### Component explanation:
-- `fundi.from_` - Helps define dependencies.
-
-  Use cases:
-    - Tell resolver to resolve parameter value by its type, not name (ex: `parameter: from_(Session)`)
-    - Define dependency (ex: `parameter: type = from_(dependency)`).
-
-      In this case it can be replaced with `fundi.scan.scan` (ex: `parameter: type = scan(dependency)`)
-- `fundi.scan` - Scans function for dependencies. Returns `CallableInfo` object that is 
-  used by all functions that resolve dependencies.
-- `fundi.order` - returns order in which dependencies will be resolved
-- `fundi.tree` - returns dependency resolving tree
