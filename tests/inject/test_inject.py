@@ -89,3 +89,31 @@ async def test_inject_async_generator():
         assert result == "result"
 
     assert dependency_state == "finished"
+
+
+def test_inject_cached():
+    def dep() -> type:
+        return type("unique type", (object,), {})
+
+    def application(unique_type: type = from_(dep), unique_type1: type = from_(dep)):
+        return unique_type is unique_type1
+
+
+    with ExitStack() as stack:
+        is_the_same_type = inject({}, scan(application), stack)
+
+        assert is_the_same_type is True
+
+
+def test_inject_uncached():
+    def dep() -> type:
+        return type("unique type", (object,), {})
+
+    def application(unique_type: type = from_(dep), unique_type1: type = from_(dep, caching=False)):
+        return unique_type is unique_type1
+
+
+    with ExitStack() as stack:
+        is_the_same_type = inject({}, scan(application), stack)
+
+        assert is_the_same_type is False
