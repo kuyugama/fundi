@@ -6,7 +6,10 @@ Dependencies in FunDI are simple asynchronous/synchronous functions.
 That are used to create and provide data to dependants.
 They help split code into preparation and actual work.
 
-  Note: Each dependency is evaluated only once per injection cycle — subsequent uses are cached.
+  Note: By default, each dependency is evaluated only once
+  per injection cycle — subsequent uses are cached.
+
+  To disable this behavior use :code:`caching=False` parameter in :code:`from_(...)` and :code:`scan(...)` functions
 
 Example of dependency that generates one random name:
 

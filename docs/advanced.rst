@@ -11,9 +11,11 @@ resources after data they returned was used
 
 Caching
 =======
-Library automatically caches all dependency results, 
+By default, FunDI automatically caches all dependency results,
 so you can use dependencies whether you need not bothering
 about data duplicates
+
+  To disable this behavior - use :code:`caching` parameter when defining dependant's dependency
 
 .. literalinclude:: ../examples/caching.py
 
