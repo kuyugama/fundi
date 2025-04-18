@@ -31,6 +31,7 @@ class Parameter:
 @dataclass
 class CallableInfo(typing.Generic[R]):
     call: typing.Callable[..., typing.Any]
+    use_cache: bool
     async_: bool
     generator: bool
     parameters: list[Parameter]

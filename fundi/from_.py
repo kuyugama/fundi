@@ -4,7 +4,9 @@ from fundi.scan import scan
 from fundi.types import CallableInfo, TypeResolver
 
 
-def from_(dependency: type | typing.Callable[..., typing.Any]) -> TypeResolver | CallableInfo:
+def from_(
+    dependency: type | typing.Callable[..., typing.Any], caching: bool = True
+) -> TypeResolver | CallableInfo:
     """
     Use callable or type as dependency for parameter of function
 
@@ -13,9 +15,10 @@ def from_(dependency: type | typing.Callable[..., typing.Any]) -> TypeResolver |
     if dependency parameter is type the ``fundi.types.TypeResolver`` is returned
 
     :param dependency: function dependency
+    :param caching: Whether to use cached result of this callable or not
     :return: callable information
     """
     if isinstance(dependency, type):
         return TypeResolver(dependency)
 
-    return scan(dependency)
+    return scan(dependency, caching=caching)

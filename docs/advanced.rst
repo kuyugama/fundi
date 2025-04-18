@@ -11,11 +11,14 @@ resources after data they returned was used
 
 Caching
 =======
-Library automatically caches all dependency results, 
-so you can use dependencies whether you need not bothering
-about data duplicates
+FunDI caches dependency results by default — so each dependency is
+only evaluated once per injection cycle, avoiding duplicate work or inconsistent data.
 
 .. literalinclude:: ../examples/caching.py
+
+To disable this behavior - use :code:`caching=False` parameter when defining dependant's dependency:
+
+.. literalinclude:: ../examples/disabled_caching.py
 
 Scope
 =====

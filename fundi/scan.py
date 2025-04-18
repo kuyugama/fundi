@@ -4,11 +4,12 @@ import inspect
 from fundi.types import R, CallableInfo, Parameter, TypeResolver
 
 
-def scan(call: typing.Callable[..., R]) -> CallableInfo[R]:
+def scan(call: typing.Callable[..., R], caching: bool = True) -> CallableInfo[R]:
     """
     Get callable information
 
     :param call: callable to get information from
+    :param caching:  whether to use cached result of this callable or not
 
     :return: callable information
     """
@@ -39,4 +40,6 @@ def scan(call: typing.Callable[..., R]) -> CallableInfo[R]:
     async_ = inspect.iscoroutinefunction(call) or inspect.isasyncgenfunction(call)
     generator = inspect.isgeneratorfunction(call) or inspect.isasyncgenfunction(call)
 
-    return CallableInfo(call=call, async_=async_, generator=generator, parameters=params)
+    return CallableInfo(
+        call=call, use_cache=caching, async_=async_, generator=generator, parameters=params
+    )

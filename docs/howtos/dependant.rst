@@ -5,6 +5,12 @@ Dependant
 A dependant is any Python function that declares its dependencies by
 setting parameter defaults to :code:`from_(...)`. They also can be used as dependencies.
 
+  Note: By default, each dependency is evaluated only once
+  per injection cycle — subsequent uses are cached.
+
+  To disable this behavior use :code:`caching=False` parameter in :code:`from_(...)` function
+
+
 Example of dependant that use dependency to get current user:
 
 .. code-block:: python
