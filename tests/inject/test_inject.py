@@ -122,7 +122,7 @@ def test_injection_trace():
     def dep():
         raise RuntimeError()
 
-    def application(value = from_(dep)): ...
+    def application(value=from_(dep)): ...
 
     with ExitStack() as stack:
         try:

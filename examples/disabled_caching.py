@@ -20,7 +20,7 @@ def intermediate_dependency(session: Session = from_(require_session)):
 
 def application(
     session: Session = from_(intermediate_dependency),
-    session1: Session = from_(require_session, caching=False)
+    session1: Session = from_(require_session, caching=False),
 ):
     # session will be stored in cache and fetched on next occurrences
     # session1 will not be cached nor fetched from cache

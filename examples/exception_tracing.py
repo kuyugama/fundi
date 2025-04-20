@@ -2,6 +2,7 @@ from contextlib import ExitStack
 
 from fundi import from_, scan, inject, injection_trace
 
+
 def require_random_animal() -> str:
     raise ConnectionRefusedError("Failed to connect to server :<")
     return random.choice(["cat", "dog", "chicken", "horse", "platypus", "cow"])
