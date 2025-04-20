@@ -1,6 +1,7 @@
 from contextlib import ExitStack, AsyncExitStack
 
-from fundi import from_, scan, inject, ainject
+from fundi.types import InjectionTrace
+from fundi import from_, scan, inject, ainject, injection_trace
 
 
 def test_inject_sync():
@@ -98,7 +99,6 @@ def test_inject_cached():
     def application(unique_type: type = from_(dep), unique_type1: type = from_(dep)):
         return unique_type is unique_type1
 
-
     with ExitStack() as stack:
         is_the_same_type = inject({}, scan(application), stack)
 
@@ -112,8 +112,27 @@ def test_inject_uncached():
     def application(unique_type: type = from_(dep), unique_type1: type = from_(dep, caching=False)):
         return unique_type is unique_type1
 
-
     with ExitStack() as stack:
         is_the_same_type = inject({}, scan(application), stack)
 
         assert is_the_same_type is False
+
+
+def test_injection_trace():
+    def dep():
+        raise RuntimeError()
+
+    def application(value = from_(dep)): ...
+
+    with ExitStack() as stack:
+        try:
+            inject({}, scan(application), stack)
+        except RuntimeError as exc:
+            trace = injection_trace(exc)
+
+            assert isinstance(trace, InjectionTrace)
+
+            assert trace.info.call is application
+
+            assert trace.origin is not None
+            assert trace.origin.info.call is dep
