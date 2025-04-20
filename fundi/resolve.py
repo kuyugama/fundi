@@ -1,4 +1,3 @@
-import inspect
 import typing
 
 from fundi.types import CallableInfo, ParameterResult
@@ -75,11 +74,11 @@ def resolve(
     :param override: override dependencies
     :return: generator with solvation results
     """
+    from fundi.exceptions import ScopeValueNotFoundError
+
     if override is None:
         override = {}
 
-    module = inspect.getmodule(info.call)
-    module_name = module.__name__ if module else "<unknown module>"
     for parameter in info.parameters:
         if parameter.from_:
             yield resolve_by_dependency(parameter.name, parameter.from_, cache, override)
@@ -100,6 +99,4 @@ def resolve(
             yield ParameterResult(parameter.name, parameter.default, None, resolved=True)
             continue
 
-        raise ValueError(
-            f"Cannot resolve {parameter.name} for {info.call} from {module_name} - Scope does not contain required value"
-        )
+        raise ScopeValueNotFoundError(parameter.name, info)
