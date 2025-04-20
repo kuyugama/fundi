@@ -3,7 +3,7 @@ from contextlib import ExitStack, AsyncExitStack
 
 from fundi.resolve import resolve
 from fundi.types import CallableInfo
-from fundi.util import _call_sync, _call_async
+from fundi.util import _call_sync, _call_async, _add_injection_trace
 
 
 def inject(
@@ -30,22 +30,26 @@ def inject(
         cache = {}
 
     values = {}
+    try:
+        for result in resolve(scope, info, cache, override):
+            name = result.parameter_name
+            value = result.value
 
-    for result in resolve(scope, info, cache, override):
-        name = result.parameter_name
-        value = result.value
+            if not result.resolved:
+                dependency = result.dependency
 
-        if not result.resolved:
-            dependency = result.dependency
+                value = inject(scope, dependency, stack, cache, override)
 
-            value = inject(scope, dependency, stack, cache, override)
+                if dependency.use_cache:
+                    cache[dependency.call] = value
 
-            if dependency.use_cache:
-                cache[dependency.call] = value
+            values[name] = value
 
-        values[name] = value
+        return _call_sync(stack, info, values)
 
-    return _call_sync(stack, info, values)
+    except Exception as exc:
+        _add_injection_trace(exc, info, values)
+        raise exc
 
 
 async def ainject(
@@ -70,21 +74,25 @@ async def ainject(
 
     values = {}
 
-    for result in resolve(scope, info, cache, override):
-        name = result.parameter_name
-        value = result.value
+    try:
+        for result in resolve(scope, info, cache, override):
+            name = result.parameter_name
+            value = result.value
 
-        if not result.resolved:
-            dependency = result.dependency
+            if not result.resolved:
+                dependency = result.dependency
 
-            value = await ainject(scope, dependency, stack, cache, override)
+                value = await ainject(scope, dependency, stack, cache, override)
 
-            if dependency.use_cache:
-                cache[dependency.call] = value
+                if dependency.use_cache:
+                    cache[dependency.call] = value
 
-        values[name] = value
+            values[name] = value
 
-    if not info.async_:
-        return _call_sync(stack, info, values)
+        if not info.async_:
+            return _call_sync(stack, info, values)
 
-    return await _call_async(stack, info, values)
+        return await _call_async(stack, info, values)
+    except Exception as exc:
+        _add_injection_trace(exc, info, values)
+        raise exc

@@ -1,8 +1,32 @@
 import typing
+import inspect
 from contextlib import AsyncExitStack, ExitStack
 
 from fundi.resolve import resolve
-from fundi.types import CallableInfo
+from fundi.types import CallableInfo, InjectionTrace
+
+
+def _callable_str(call: typing.Callable) -> str:
+    if hasattr(call, "__qualname__"):
+        name = call.__qualname__
+    elif hasattr(call, "__name__"):
+        name = call.__name__
+    else:
+        name = str(call)
+
+    module = inspect.getmodule(call)
+
+    module_name = "<unknown>" if module is None else module.__name__
+
+    return f"<{name} from {module_name}>"
+
+
+def _add_injection_trace(
+    exception: Exception, info: CallableInfo, values: typing.Mapping[str, typing.Any]
+) -> None:
+    exception.__fundi_injection_trace__ = InjectionTrace(
+        info, values, getattr(exception, "__fundi_injection_trace__", None)
+    )
 
 
 def _call_sync(
@@ -64,6 +88,19 @@ async def _call_async(
         value = await value
 
     return value
+
+
+def injection_trace(exception: Exception) -> InjectionTrace:
+    """
+    Get injection trace from exception
+
+    :param exception: exception to get injection trace from
+    :return: injection trace
+    """
+    if not hasattr(exception, "__fundi_injection_trace__"):
+        raise ValueError(f"Exception {exception} does not contain injection trace")
+
+    return typing.cast(InjectionTrace, getattr(exception, "__fundi_injection_trace__"))
 
 
 def tree(
