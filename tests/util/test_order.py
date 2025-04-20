@@ -33,16 +33,16 @@ def test_uncached_order():
         yield "database session"
         print("Closed database session")
 
-
     def _require_user(session: str = from_(_require_database_session)) -> str:
         return "user"
 
-
-    def _application(user: str = from_(_require_user), session: str = from_(_require_database_session, caching=False)):
+    def _application(
+        user: str = from_(_require_user),
+        session: str = from_(_require_database_session, caching=False),
+    ):
         print(f"Application started with {user = } and {session = }")
         yield
         print("Application stopped")
-
 
     result = order(
         {"database_url": "postgresql://user:password@localhost:5432/database"}, scan(_application)

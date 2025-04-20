@@ -1,7 +1,7 @@
 import typing
 from dataclasses import dataclass
 
-__all__ = ["R", "TypeResolver", "Parameter", "CallableInfo", "ParameterResult"]
+__all__ = ["R", "TypeResolver", "Parameter", "CallableInfo", "ParameterResult", "InjectionTrace"]
 
 R = typing.TypeVar("R")
 
@@ -43,3 +43,10 @@ class ParameterResult:
     value: typing.Any | None
     dependency: CallableInfo | None
     resolved: bool
+
+
+@dataclass
+class InjectionTrace:
+    info: CallableInfo
+    values: typing.Mapping[str, typing.Any]
+    origin: "InjectionTrace | None" = None
