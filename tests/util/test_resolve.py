@@ -1,4 +1,4 @@
-from fundi import resolve, from_, scan
+from fundi import resolve, from_, scan, exceptions
 
 
 def test_resolve_sync():
@@ -96,3 +96,15 @@ def test_override_dependency():
 
         assert result.dependency
         assert result.dependency.call is test_dep
+
+
+def test_resolve_not_found():
+    def func(arg: int): ...
+
+    try:
+        for result in resolve({}, scan(func), {}):
+            # This assertion would never evaluate under normal circumstances
+            assert result is None
+    except exceptions.ScopeValueNotFoundError as exc:
+        assert exc.parameter == "arg"
+        assert exc.info.call is func
