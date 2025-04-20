@@ -36,3 +36,49 @@ FunDI provides useful functions to help you debug and optimize your dependency i
         [<function require_user at ...>]
 
       Want more details? Try :code:`tree()`. Want less pain? Good luck.
+
+
+Exceptions
+==========
+
+During injection exception may be raised, so you need to know everything about them.
+
+Scope value not found
+---------------------
+
+If scope hadn't request by dependency value - FunDI would raise :code:`ScopeValueNotFoundError`
+
+Tracing
+-------
+
+FunDI helps you understand direct cause of exceptions and place where did they happen -
+library adds its injection trace to exception.
+
+.. code-block:: python
+
+    from contextlib import ExitStack
+
+    from fundi import from_, scan, inject, injection_trace
+
+
+    def require_random_animal() -> str:
+        raise ConnectionRefusedError("Failed to connect to server :<")
+        return random.choice(["cat", "dog", "chicken", "horse", "platypus", "cow"])
+
+
+    def application(
+        animal: str = from_(require_random_animal),
+    ):
+        print("Animal:", animal)
+
+
+    with ExitStack() as stack:
+        try:
+            inject({}, scan(application), stack)
+        except Exception as e:
+            print(injection_trace(e))
+
+Output would be::
+
+    InjectionTrace(info=CallableInfo(call=<function application at ...>, ...), values={}, origin=InjectionTrace(info=CallableInfo(call=<function require_random_animal at ...>, ...), values={}, origin=None))
+

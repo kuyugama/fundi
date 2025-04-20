@@ -32,3 +32,10 @@ Scope by type
 Dependency parameters can resolve their values from scope by type using `from_`
 
 .. literalinclude:: ../examples/scope_by_type.py
+
+
+Exception tracing
+=================
+FunDI adds injection trace to all exceptions on injection to help you understand them
+
+.. literalinclude:: ../examples/exception_tracing.py
