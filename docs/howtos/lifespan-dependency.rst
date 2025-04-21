@@ -54,6 +54,18 @@ Asynchronous dependency that does the same:
             file.close()
 
 
+Exception awareness
+===================
+Lifespan dependencies aware about downstream exceptions. This means you can
+catch exception that happened during injection in lifespan dependency to do additional
+cleanup if exception occurred.
+
+  Note: Even that lifespan dependency can catch exception does not mean it can ignore it.
+  FunDI does not allow lifespan dependencies to ignore exceptions. So, exception will be re-raised
+  even if lifespan dependency ignored it.
+
+.. literalinclude:: ../examples/lifespan_exception_awareness.py
+
 When to use lifespan dependencies
 =================================
 - Managing connections
