@@ -1,6 +1,8 @@
 import typing
 import inspect
+import warnings
 from contextlib import AsyncExitStack, ExitStack
+from types import TracebackType
 
 from fundi.resolve import resolve
 from fundi.types import CallableInfo, InjectionTrace
@@ -45,16 +47,25 @@ def _call_sync(
     value = info.call(**values)
 
     if info.generator:
-        generator = value
+        generator: typing.Generator = value
         value = next(generator)
 
-        def exit_generator():
+        def close_generator(exc_type: type[BaseException], exc_value: BaseException, tb: TracebackType) -> bool:
             try:
-                next(generator)
+                if exc_type is not None:
+                    generator.throw(exc_type, exc_value, tb)
+                else:
+                    next(generator)
             except StopIteration:
-                pass
+                # DO NOT ALLOW LIFESPAN DEPENDENCIES TO IGNORE EXCEPTIONS
+                return exc_type is None
 
-        stack.callback(exit_generator)
+            warnings.warn("Generator not exited", UserWarning)
+
+            # DO NOT ALLOW LIFESPAN DEPENDENCIES TO IGNORE EXCEPTIONS
+            return exc_type is None
+
+        stack.push(close_generator)
 
     return value
 
@@ -73,16 +84,25 @@ async def _call_async(
     value = info.call(**values)
 
     if info.generator:
-        generator = value
+        generator: typing.AsyncGenerator = value
         value = await anext(generator)
 
-        async def exit_generator():
+        async def close_generator(exc_type: type[BaseException], exc_value: BaseException, tb: TracebackType) -> bool:
             try:
-                await anext(generator)
-            except StopAsyncIteration:
-                pass
+                if exc_type is not None:
+                    await generator.athrow(exc_type, exc_value, tb)
+                else:
+                    await anext(generator)
+            except StopIteration:
+                # DO NOT ALLOW LIFESPAN DEPENDENCIES TO IGNORE EXCEPTIONS
+                return exc_type is None
 
-        stack.push_async_callback(exit_generator)
+            warnings.warn("Generator not exited", UserWarning)
+
+            # DO NOT ALLOW LIFESPAN DEPENDENCIES TO IGNORE EXCEPTIONS
+            return exc_type is None
+
+        stack.push_async_exit(close_generator)
 
     else:
         value = await value
