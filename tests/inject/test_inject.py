@@ -136,3 +136,36 @@ def test_injection_trace():
 
             assert trace.origin is not None
             assert trace.origin.info.call is dep
+
+
+def test_generator_exception_awareness():
+    dependency_state = None
+
+    def dep():
+        nonlocal dependency_state
+        dependency_state = "started"
+        try:
+            yield 111
+            dependency_state = "finished"
+        except RuntimeError:
+            dependency_state = "failed"
+
+    def func(arg: int, arg1: str, arg2: int = from_(dep)) -> str:
+        assert dependency_state == "started"
+
+        assert arg == 1
+        assert arg1 == "value"
+        assert arg2 == 111
+
+        raise RuntimeError()
+
+    try:
+        with ExitStack() as stack:
+            assert dependency_state is None
+            inject({"arg": 1, "arg1": "value"}, scan(func), stack)
+    except RuntimeError:
+        assert True
+    else:
+        assert False  # This should never happen
+
+    assert dependency_state == "failed"
