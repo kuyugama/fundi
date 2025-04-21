@@ -59,7 +59,7 @@ def _call_sync(
             except StopIteration:
                 # DO NOT ALLOW LIFESPAN DEPENDENCIES TO IGNORE EXCEPTIONS
                 return exc_type is None
-            except exc_type as e:
+            except Exception as e:
                 # Do not include re-raise of this exception in traceback to make it cleaner
                 if e is exc_value:
                     return False
@@ -102,7 +102,7 @@ async def _call_async(
             except StopIteration:
                 # DO NOT ALLOW LIFESPAN DEPENDENCIES TO IGNORE EXCEPTIONS
                 return exc_type is None
-            except exc_type as e:
+            except Exception as e:
                 # Do not include re-raise of this exception in traceback to make it cleaner
                 if e is exc_value:
                     return False
