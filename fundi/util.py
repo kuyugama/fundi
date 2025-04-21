@@ -99,7 +99,7 @@ async def _call_async(
                     await generator.athrow(exc_type, exc_value, tb)
                 else:
                     await anext(generator)
-            except StopIteration:
+            except StopAsyncIteration:
                 # DO NOT ALLOW LIFESPAN DEPENDENCIES TO IGNORE EXCEPTIONS
                 return exc_type is None
             except Exception as e:
