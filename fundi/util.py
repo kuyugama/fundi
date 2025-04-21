@@ -50,7 +50,9 @@ def _call_sync(
         generator: typing.Generator = value
         value = next(generator)
 
-        def close_generator(exc_type: type[BaseException], exc_value: BaseException, tb: TracebackType) -> bool:
+        def close_generator(
+            exc_type: type[BaseException], exc_value: BaseException, tb: TracebackType
+        ) -> bool:
             try:
                 if exc_type is not None:
                     generator.throw(exc_type, exc_value, tb)
@@ -93,7 +95,9 @@ async def _call_async(
         generator: typing.AsyncGenerator = value
         value = await anext(generator)
 
-        async def close_generator(exc_type: type[BaseException], exc_value: BaseException, tb: TracebackType) -> bool:
+        async def close_generator(
+            exc_type: type[BaseException], exc_value: BaseException, tb: TracebackType
+        ) -> bool:
             try:
                 if exc_type is not None:
                     await generator.athrow(exc_type, exc_value, tb)

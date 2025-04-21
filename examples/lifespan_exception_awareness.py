@@ -19,7 +19,9 @@ def lifespan():
 
 
 def require_random_animal(b=from_(lifespan)) -> str:
-    raise ConnectionRefusedError("Cannot connect to random.animal.com")  # <== Exception happened here
+    raise ConnectionRefusedError(
+        "Cannot connect to random.animal.com"
+    )  # <== Exception happened here
 
 
 def application(
@@ -31,5 +33,7 @@ def application(
 try:
     with ExitStack() as stack:
         inject({}, scan(application), stack)
-except ConnectionRefusedError:  # <== Lifespan dependency does not reraise exception, but it still goes downstream
+except (
+    ConnectionRefusedError
+):  # <== Lifespan dependency does not reraise exception, but it still goes downstream
     print("ConnectionRefusedError happened on injection")
