@@ -1,3 +1,5 @@
+![FunDI logo](https://raw.githubusercontent.com/kuyugama/fundi/refs/heads/main/docs/_static/FunDI_horizontal.png)
+
 # # _FunDI_
 > Solution for problem no one had before
 
