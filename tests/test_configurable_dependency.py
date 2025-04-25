@@ -1,6 +1,6 @@
 import warnings
 
-from fundi import configurable_dependency
+from fundi import configurable_dependency, MutableConfigurationWarning
 
 
 def test_configurable_dependency_caching():
@@ -31,5 +31,5 @@ def test_configurable_dependency_mutable_argument():
         assert factory(["permissions"]) is not factory(["permissions"])
 
     assert got_warnings
-    assert got_warnings[0].category is UserWarning
+    assert got_warnings[0].category is MutableConfigurationWarning
 

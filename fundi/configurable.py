@@ -9,7 +9,20 @@ from fundi.util import _callable_str
 P = typing.ParamSpec("P")
 
 
+class MutableConfigurationWarning(UserWarning):
+    pass
+
+
 def configurable_dependency(configurator: typing.Callable[P, R]) -> typing.Callable[P, R]:
+    """
+    Create dependency configurator that caches configured dependencies.
+    This helps FunDI cache resolver understand that dependency already executed, if it was.
+
+    Note: Calls with mutable arguments will not be stored in cache and warning would be shown
+
+    :param configurator: Original dependency configurator
+    :return: cache aware dependency configurator
+    """
     dependencies: dict[tuple[tuple, frozenset], R] = {}
     info = scan(configurator)
 
@@ -26,7 +39,7 @@ def configurable_dependency(configurator: typing.Callable[P, R]) -> typing.Calla
         except TypeError:
             warnings.warn(
                 f"Can't cache dependency created via {_callable_str(configurator)}: configured with unhashable arguments",
-                UserWarning,
+                MutableConfigurationWarning,
             )
             use_cache = False
 
