@@ -11,3 +11,5 @@ API Reference
 .. autofunction :: fundi.ainject
 
 .. autofunction :: fundi.resolve
+
+.. autofunction :: fundi.configurable_dependency
