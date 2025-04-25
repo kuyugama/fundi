@@ -66,6 +66,9 @@ based on provided arguments to them:
   Note: :code:`configurable_dependency` decorator is optional, but it caches dependencies,
   so their results can be cached on injection.
 
+  Also, :code:`configurable_dependency` decorator does not cache dependencies configured with mutable arguments.
+
+
 
 Composite dependencies
 ======================
