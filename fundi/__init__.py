@@ -5,3 +5,4 @@ from .resolve import resolve
 from .inject import inject, ainject
 from .util import tree, order, injection_trace
 from .types import CallableInfo, TypeResolver, InjectionTrace
+from .configurable import configurable_dependency, MutableConfigurationWarning

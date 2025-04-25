@@ -52,3 +52,27 @@ Exception tracing
 FunDI adds injection trace to all exceptions on injection to help you understand them
 
 .. literalinclude:: ../examples/exception_tracing.py
+
+
+Configurable dependencies
+=========================
+FunDI supports configurable dependencies - functions that return dependencies with different behavior
+based on provided arguments to them:
+
+.. literalinclude:: ../examples/configurable_dependency.py
+
+..
+
+  Note: :code:`configurable_dependency` decorator is optional, but it caches dependencies,
+  so their results can be cached on injection.
+
+  Also, :code:`configurable_dependency` decorator does not cache dependencies configured with mutable arguments.
+
+
+
+Composite dependencies
+======================
+Composite dependencies - special kind of configurable dependency that accepts other
+dependencies as parameters
+
+.. literalinclude:: ../examples/composite_dependency.py
