@@ -1,8 +1,8 @@
 import typing
 import inspect
 import warnings
-from contextlib import AsyncExitStack, ExitStack
 from types import TracebackType
+from contextlib import AsyncExitStack, ExitStack
 
 from fundi.resolve import resolve
 from fundi.types import CallableInfo, InjectionTrace
