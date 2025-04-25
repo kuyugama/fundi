@@ -26,6 +26,7 @@ Deep dive to each component
 
     dependency
     lifespan-dependency
+    configurable-dependency
     dependant
     scope
     injection
