@@ -64,7 +64,7 @@ cleanup if exception occurred.
   FunDI does not allow lifespan dependencies to ignore exceptions. So, exception will be re-raised
   even if lifespan dependency ignored it.
 
-.. literalinclude:: ../examples/lifespan_exception_awareness.py
+.. literalinclude:: ../../examples/lifespan_exception_awareness.py
 
 When to use lifespan dependencies
 =================================
