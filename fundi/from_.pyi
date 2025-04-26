@@ -1,8 +1,6 @@
 import typing
 from typing import overload
 
-from fundi.types import TypeResolver
-
 T = typing.TypeVar("T", bound=type)
 R = typing.TypeVar("R")
 
@@ -20,5 +18,3 @@ def from_(
 def from_(dependency: typing.Callable[..., typing.Awaitable[R]], caching: bool = True) -> R: ...
 @overload
 def from_(dependency: typing.Callable[..., R], caching: bool = True) -> R: ...
-
-FromType: typing.TypeAlias = typing.Annotated[R, TypeResolver]

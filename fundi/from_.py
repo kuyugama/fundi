@@ -23,5 +23,3 @@ def from_(
 
     return scan(dependency, caching=caching)
 
-
-FromType: typing.TypeAlias = typing.Annotated[R, TypeResolver]
