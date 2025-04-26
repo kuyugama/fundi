@@ -13,3 +13,5 @@ API Reference
 .. autofunction :: fundi.resolve
 
 .. autofunction :: fundi.configurable_dependency
+
+.. autodata:: fundi.FromType

@@ -17,8 +17,12 @@ Dependant's parameter with no :code:`from_(...)` as default value will be resolv
 
 Values from scope can be resolved either by parameter name or by parameter type.
 By default - values are resolved by parameter name. To indicate,
-that value should be resolved by type you need to use :code:`from_(...)` as type annotation
+that value should be resolved by type you need to use :code:`FromType[...]` as type annotation
 and pass required type to it.
+
+  Note: In earlier versions of FunDI to resolve parameter by type :code:`from_(...)` function was used,
+  still, it is supported, but deprecated behavior. And will be removed in future updates(or not). Thus,
+  I'd recommend to rewrite your code to use :code:`FromType[...]` type annotation
 
   Depending on context, this lets you avoid name clashes and enforce clearer DI behavior.
 
@@ -42,9 +46,9 @@ Dependant that use value resolved by type:
 
     from urllib.request import Request
 
-    from fundi import from_
+    from fundi import FromType
 
-    def require_user(req: from_(Request)) -> str:
+    def require_user(req: FromType[Request]) -> str:
         user = req.get_header("User")
 
         if user is None:
