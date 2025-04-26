@@ -1,6 +1,6 @@
 from contextlib import ExitStack
 
-from fundi import from_, inject, scan
+from fundi import inject, scan, FromType
 
 
 class Session:
@@ -8,7 +8,7 @@ class Session:
 
 
 def application(
-    session: from_(Session),
+    session: FromType[Session],
 ):
     print(f"Application started with {session = }")
 

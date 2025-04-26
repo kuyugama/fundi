@@ -1,4 +1,4 @@
-from fundi import scan, from_
+from fundi import scan, from_, FromType
 from fundi.types import Parameter
 
 
@@ -115,3 +115,18 @@ def test_scan_async_generator_deps():
     assert info.generator is True
     assert info.call is func
     assert info.parameters == [Parameter("arg", int, dep_info)]
+
+
+# noinspection PyPep8Naming
+def test_scan_FromType():
+    class Session: ...
+
+    def dep(arg: FromType[Session]): ...
+
+    info = scan(dep)
+
+    assert info.async_ is False
+    assert info.generator is False
+    assert info.call is dep
+    assert info.parameters == [Parameter("arg", Session, None, resolve_by_type=True)]
+
