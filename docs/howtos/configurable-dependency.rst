@@ -11,7 +11,7 @@ based on parameters, or only slightly change their behavior.
 ..
 
   Note: :code:`configurable_dependency` decorator is optional, but it caches dependencies,
-  so they results can be cached on injection.
+  so their results can be cached on injection.
 
   Also, :code:`configurable_dependency` decorator does not cache dependencies configured with mutable arguments.
 
