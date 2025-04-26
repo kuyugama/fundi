@@ -1,4 +1,4 @@
-from fundi import resolve, from_, scan, exceptions
+from fundi import resolve, from_, scan, exceptions, FromType
 
 
 def test_resolve_sync():
@@ -54,6 +54,33 @@ def test_resolve_by_type():
 
     # Using from_ on type tells resolver that it should search value in scope by type, not parameter name
     def func(arg: int, arg1: str, handler: from_(EventHandler)):
+        pass
+
+    event_handler = EventHandler()
+
+    for result in resolve({"arg": 1, "arg1": "value", "+1": event_handler}, scan(func), {}):
+        assert result.parameter_name in ("arg", "arg1", "handler")
+
+        if result.parameter_name == "arg1":
+            assert result.value == "value"
+
+        if result.parameter_name == "arg":
+            assert result.value == 1
+
+        if result.parameter_name == "handler":
+            assert result.value is event_handler
+
+
+# noinspection PyPep8Naming
+def test_resolve_by_type_using_FromType():
+    class EventHandler:
+        pass
+
+    def dep():
+        pass
+
+    # Using from_ on type tells resolver that it should search value in scope by type, not parameter name
+    def func(arg: int, arg1: str, handler: FromType[EventHandler]):
         pass
 
     event_handler = EventHandler()
