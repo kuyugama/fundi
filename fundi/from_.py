@@ -1,7 +1,7 @@
 import typing
 
 from fundi.scan import scan
-from fundi.types import CallableInfo, TypeResolver
+from fundi.types import CallableInfo, TypeResolver, R
 
 
 def from_(
@@ -22,3 +22,6 @@ def from_(
         return TypeResolver(dependency)
 
     return scan(dependency, caching=caching)
+
+
+FromType: typing.TypeAlias = typing.Annotated[R, TypeResolver]
