@@ -56,6 +56,12 @@ Dependant that use value resolved by type:
 
         return user
 
+
+.. warning::
+
+    If multiple values in the scope share the same type, :code:`FromType[...]` resolution
+    will prioritize the first match found. Ensure your scope is clean and well-structured.
+
 ..
 
   With great scope comes great confusion. Use it wisely.
