@@ -10,7 +10,6 @@ def test_configurable_dependency_caching():
 
         return checker
 
-
     assert factory() is factory()
     assert factory(require_admin=True) is not factory()
     assert factory(require_admin=False) is not factory()
@@ -32,4 +31,3 @@ def test_configurable_dependency_mutable_argument():
 
     assert got_warnings
     assert got_warnings[0].category is MutableConfigurationWarning
-

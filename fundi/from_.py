@@ -22,4 +22,3 @@ def from_(
         return TypeResolver(dependency)
 
     return scan(dependency, caching=caching)
-
