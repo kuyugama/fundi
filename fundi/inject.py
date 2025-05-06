@@ -32,13 +32,19 @@ def inject(
     values = {}
     try:
         for result in resolve(scope, info, cache, override):
-            name = result.parameter_name
+            name = result.parameter.name
             value = result.value
 
             if not result.resolved:
                 dependency = result.dependency
 
-                value = inject(scope, dependency, stack, cache, override)
+                value = inject(
+                    {**scope, "__fundi_parameter__": result.parameter},
+                    dependency,
+                    stack,
+                    cache,
+                    override,
+                )
 
                 if dependency.use_cache:
                     cache[dependency.call] = value
@@ -76,13 +82,19 @@ async def ainject(
 
     try:
         for result in resolve(scope, info, cache, override):
-            name = result.parameter_name
+            name = result.parameter.name
             value = result.value
 
             if not result.resolved:
                 dependency = result.dependency
 
-                value = await ainject(scope, dependency, stack, cache, override)
+                value = await ainject(
+                    {**scope, "__fundi_parameter__": result.parameter},
+                    dependency,
+                    stack,
+                    cache,
+                    override,
+                )
 
                 if dependency.use_cache:
                     cache[dependency.call] = value

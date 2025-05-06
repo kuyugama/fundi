@@ -53,7 +53,9 @@ def _call_sync(
         value = next(generator)
 
         def close_generator(
-            exc_type: type[BaseException] | None, exc_value: BaseException | None, tb: TracebackType | None
+            exc_type: type[BaseException] | None,
+            exc_value: BaseException | None,
+            tb: TracebackType | None,
         ) -> bool:
             try:
                 if exc_type is not None:
@@ -98,7 +100,9 @@ async def _call_async(
         value = await anext(generator)
 
         async def close_generator(
-            exc_type: type[BaseException] | None, exc_value: BaseException | None, tb: TracebackType | None
+            exc_type: type[BaseException] | None,
+            exc_value: BaseException | None,
+            tb: TracebackType | None,
         ) -> bool:
             try:
                 if exc_type is not None:
@@ -160,7 +164,7 @@ def tree(
     values = {}
 
     for result in resolve(scope, info, cache):
-        name = result.parameter_name
+        name = result.parameter.name
         value = result.value
 
         if not result.resolved:

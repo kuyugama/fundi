@@ -39,7 +39,7 @@ class CallableInfo(typing.Generic[R]):
 
 @dataclass
 class ParameterResult:
-    parameter_name: str
+    parameter: Parameter
     value: typing.Any | None
     dependency: CallableInfo | None
     resolved: bool
