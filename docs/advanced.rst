@@ -39,6 +39,13 @@ Library provides injection scope, that allows to inject values to dependencies p
 
 .. literalinclude:: ../examples/scope.py
 
+Dependency parameter awareness
+==============================
+Dependant's dependencies know of the parameter they are injected to.
+This can be used to create more transparent dependencies:
+
+ .. literalinclude:: ../examples/dependency_param_awareness.py
+
 
 Scope by type
 =============
