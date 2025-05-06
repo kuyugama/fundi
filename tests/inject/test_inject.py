@@ -1,7 +1,7 @@
 from contextlib import ExitStack, AsyncExitStack
 
 from fundi.types import InjectionTrace
-from fundi import from_, scan, inject, ainject, injection_trace
+from fundi import from_, scan, inject, ainject, injection_trace, Parameter, FromType
 
 
 def test_inject_sync():
@@ -169,3 +169,18 @@ def test_generator_exception_awareness():
         assert False  # This should never happen
 
     assert dependency_state == "failed"
+
+
+def test_dependency_parameter_awareness():
+    def dep(param: FromType[Parameter]) -> str:
+        assert param.name == "arg"
+        assert param.annotation is str
+
+        return "value"
+
+    def func(arg: str = from_(dep)):
+        assert arg == "value"
+
+
+    with ExitStack() as stack:
+        inject({}, scan(func), stack)
