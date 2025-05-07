@@ -1,32 +1,31 @@
 import typing
 
-from fundi.types import CallableInfo, ParameterResult
+from fundi.types import CallableInfo, ParameterResult, Parameter
 
 
 def resolve_by_dependency(
-    name: str,
-    dependency: CallableInfo,
+    param: Parameter,
     cache: typing.Mapping[typing.Callable, typing.Any],
     override: typing.Mapping[typing.Callable, typing.Any],
 ) -> ParameterResult:
-    call = dependency.call
+    dependency = param.from_
 
-    if call in override:
-        value = override[call]
+    value = override.get(dependency.call)
+    if value is not None:
         if isinstance(value, CallableInfo):
-            return ParameterResult(name, None, value, resolved=False)
+            return ParameterResult(param, None, value, resolved=False)
 
-        return ParameterResult(name, value, dependency, resolved=True)
+        return ParameterResult(param, value, dependency, resolved=True)
 
-    if dependency.use_cache and call in cache:
-        return ParameterResult(name, cache[call], dependency, resolved=True)
+    if dependency.use_cache and dependency.call in cache:
+        return ParameterResult(param, cache[dependency.call], dependency, resolved=True)
 
-    return ParameterResult(name, None, dependency, resolved=False)
+    return ParameterResult(param, None, dependency, resolved=False)
 
 
-def resolve_by_type(
-    scope: typing.Mapping[str, typing.Any], name: str, annotation: type
-) -> ParameterResult:
+def resolve_by_type(scope: typing.Mapping[str, typing.Any], param: Parameter) -> ParameterResult:
+    annotation = param.annotation
+
     type_options = (annotation,)
 
     origin = typing.get_origin(annotation)
@@ -39,9 +38,9 @@ def resolve_by_type(
         if not isinstance(value, type_options):
             continue
 
-        return ParameterResult(name, value, None, resolved=True)
+        return ParameterResult(param, value, None, resolved=True)
 
-    return ParameterResult(name, None, None, resolved=False)
+    return ParameterResult(param, None, None, resolved=False)
 
 
 def resolve(
@@ -81,22 +80,22 @@ def resolve(
 
     for parameter in info.parameters:
         if parameter.from_:
-            yield resolve_by_dependency(parameter.name, parameter.from_, cache, override)
+            yield resolve_by_dependency(parameter, cache, override)
             continue
 
         if parameter.resolve_by_type:
-            result = resolve_by_type(scope, parameter.name, parameter.annotation)
+            result = resolve_by_type(scope, parameter)
 
             if result.resolved:
                 yield result
                 continue
 
         elif parameter.name in scope:
-            yield ParameterResult(parameter.name, scope[parameter.name], None, resolved=True)
+            yield ParameterResult(parameter, scope[parameter.name], None, resolved=True)
             continue
 
         if parameter.has_default:
-            yield ParameterResult(parameter.name, parameter.default, None, resolved=True)
+            yield ParameterResult(parameter, parameter.default, None, resolved=True)
             continue
 
         raise ScopeValueNotFoundError(parameter.name, info)

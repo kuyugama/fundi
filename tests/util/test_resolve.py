@@ -14,12 +14,12 @@ def test_resolve_sync():
             assert result.dependency.call is dep
 
         if result.resolved:
-            assert result.parameter_name in ("arg", "arg1")
+            assert result.parameter.name in ("arg", "arg1")
 
-            if result.parameter_name == "arg1":
+            if result.parameter.name == "arg1":
                 assert result.value == "value"
 
-            if result.parameter_name == "arg":
+            if result.parameter.name == "arg":
                 assert result.value == 1
 
 
@@ -36,12 +36,12 @@ def test_resolve_async():
             assert result.dependency.call is dep
 
         if result.resolved:
-            assert result.parameter_name in ("arg", "arg1")
+            assert result.parameter.name in ("arg", "arg1")
 
-            if result.parameter_name == "arg1":
+            if result.parameter.name == "arg1":
                 assert result.value == "value"
 
-            if result.parameter_name == "arg":
+            if result.parameter.name == "arg":
                 assert result.value == 1
 
 
@@ -59,15 +59,15 @@ def test_resolve_by_type():
     event_handler = EventHandler()
 
     for result in resolve({"arg": 1, "arg1": "value", "+1": event_handler}, scan(func), {}):
-        assert result.parameter_name in ("arg", "arg1", "handler")
+        assert result.parameter.name in ("arg", "arg1", "handler")
 
-        if result.parameter_name == "arg1":
+        if result.parameter.name == "arg1":
             assert result.value == "value"
 
-        if result.parameter_name == "arg":
+        if result.parameter.name == "arg":
             assert result.value == 1
 
-        if result.parameter_name == "handler":
+        if result.parameter.name == "handler":
             assert result.value is event_handler
 
 
@@ -86,15 +86,15 @@ def test_resolve_by_type_using_FromType():
     event_handler = EventHandler()
 
     for result in resolve({"arg": 1, "arg1": "value", "+1": event_handler}, scan(func), {}):
-        assert result.parameter_name in ("arg", "arg1", "handler")
+        assert result.parameter.name in ("arg", "arg1", "handler")
 
-        if result.parameter_name == "arg1":
+        if result.parameter.name == "arg1":
             assert result.value == "value"
 
-        if result.parameter_name == "arg":
+        if result.parameter.name == "arg":
             assert result.value == 1
 
-        if result.parameter_name == "handler":
+        if result.parameter.name == "handler":
             assert result.value is event_handler
 
 
@@ -104,7 +104,7 @@ def test_override_result():
     def func(arg: int = from_(dep)): ...
 
     for result in resolve({}, scan(func), {}, override={dep: 2}):
-        assert result.parameter_name == "arg"
+        assert result.parameter.name == "arg"
 
         assert result.value == 2
 
@@ -117,7 +117,7 @@ def test_override_dependency():
     def func(arg: int = from_(dep)): ...
 
     for result in resolve({}, scan(func), {}, override={dep: scan(test_dep)}):
-        assert result.parameter_name == "arg"
+        assert result.parameter.name == "arg"
 
         assert result.resolved is False
 

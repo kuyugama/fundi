@@ -88,19 +88,47 @@ Example of injection that produces value:
     The same works with asynchronous injection
 
 
+Dependency parameter awareness
+==============================
+Sometimes dependencies need to know *where* they are being injected.
+
+With **dependency parameter awareness**, FunDI makes the `fundi.Parameter`
+object of the target parameter available for any dependency that declares:
+
+.. code-block:: python
+
+    from fundi import FromType, Parameter
+
+    def dependency(param: FromType[Parameter]):
+        print(param.name)        # name of the parameter being injected to
+        print(param.annotation)  # expected type of the parameter
+        ...
+
+This allows you to build smarter and more reusable dependencies, such as:
+
+- Automatically inferring names (e.g. :code:`user_id: int = from_header()` → :code:`X-User-Id` from parameter name)
+- Performing type conversion or validation based on annotation
+
+Example
+-------
+
+ .. literalinclude:: ../../examples/dependency_param_awareness.py
+
 Summary
 =======
 
-+--------------------------+--------------------+------------------------+
-| Feature                  | :code:`inject`     | :code:`ainject`        |
-+==========================+====================+========================+
-| Sync dependencies only   | Yes                | Yes                    |
-+--------------------------+--------------------+------------------------+
-| Async dependencies       | No                 | Yes                    |
-+--------------------------+--------------------+------------------------+
-| Mixed (sync + async)     | No                 | Yes                    |
-+--------------------------+--------------------+------------------------+
-| Requires stack           | :code:`ExitStack`  | :code:`AsyncExitStack` |
-+--------------------------+--------------------+------------------------+
-| Returns value            | Yes                | Yes                    |
-+--------------------------+--------------------+------------------------+
++--------------------------------+--------------------+------------------------+
+| Feature                        | :code:`inject`     | :code:`ainject`        |
++================================+====================+========================+
+| Sync dependencies only         | Yes                | Yes                    |
++--------------------------------+--------------------+------------------------+
+| Async dependencies             | No                 | Yes                    |
++--------------------------------+--------------------+------------------------+
+| Mixed (sync + async)           | No                 | Yes                    |
++--------------------------------+--------------------+------------------------+
+| Requires stack                 | :code:`ExitStack`  | :code:`AsyncExitStack` |
++--------------------------------+--------------------+------------------------+
+| Dependency parameter awareness | Yes                | Yes                    |
++--------------------------------+--------------------+------------------------+
+| Returns value                  | Yes                | Yes                    |
++--------------------------------+--------------------+------------------------+
