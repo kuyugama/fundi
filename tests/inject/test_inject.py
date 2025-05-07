@@ -181,6 +181,5 @@ def test_dependency_parameter_awareness():
     def func(arg: str = from_(dep)):
         assert arg == "value"
 
-
     with ExitStack() as stack:
         inject({}, scan(func), stack)
