@@ -104,6 +104,22 @@ object of the target parameter available for any dependency that declares:
         print(param.annotation)  # expected type of the parameter
         ...
 
+..
+
+  Note:
+  Parameter-aware dependencies (i.e., those that accept a :code:`FromType[Parameter]`)
+  are cached just like any other dependency by default.
+
+  This means that even if the same function is injected into multiple parameters
+  (e.g., :code:`user_id`, :code:`client_id`), it will only be called once, and the cached
+  result will be reused — regardless of which parameter it's injected into.
+
+  If your function depends on the parameter name or annotation (e.g. to extract different headers),
+  you must disable caching manually using :code:`from_(..., caching=False)`.
+
+  This behavior is intentional for now and may change in future versions,
+  but currently it's the developer’s responsibility to manage it.
+
 This allows you to build smarter and more reusable dependencies, such as:
 
 - Automatically inferring names (e.g. :code:`user_id: int = from_header()` → :code:`X-User-Id` from parameter name)
