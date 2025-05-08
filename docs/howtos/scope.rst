@@ -20,11 +20,11 @@ By default - values are resolved by parameter name. To indicate,
 that value should be resolved by type you need to use :code:`FromType[...]` as type annotation
 and pass required type to it.
 
+Depending on context, this lets you avoid name clashes and enforce clearer DI behavior.
+
   Note: In earlier versions of FunDI to resolve parameter by type :code:`from_(...)` function was used,
   still, it is supported, but deprecated behavior. And will be removed in future updates(or not). Thus,
   I'd recommend to rewrite your code to use :code:`FromType[...]` type annotation
-
-  Depending on context, this lets you avoid name clashes and enforce clearer DI behavior.
 
 Example of dependant that use value from scope:
 
