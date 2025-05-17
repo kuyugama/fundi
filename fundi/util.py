@@ -169,7 +169,7 @@ def tree(
 
         if not result.resolved:
             assert result.dependency is not None
-            value = tree(scope, result.dependency, cache)
+            value = tree({**scope, "__fundi_parameter__": result.parameter}, result.dependency, cache)
 
             if result.dependency.use_cache:
                 cache[result.dependency.call] = value
