@@ -4,3 +4,4 @@ __pycache__
 .idea
 .python-version
 docs/_build
+play.py
