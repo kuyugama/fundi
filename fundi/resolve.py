@@ -10,6 +10,8 @@ def resolve_by_dependency(
 ) -> ParameterResult:
     dependency = param.from_
 
+    assert dependency is not None
+
     value = override.get(dependency.call)
     if value is not None:
         if isinstance(value, CallableInfo):
