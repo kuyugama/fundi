@@ -10,8 +10,8 @@ def inject(
     scope: typing.Mapping[str, typing.Any],
     info: CallableInfo[typing.Any],
     stack: ExitStack,
-    cache: typing.Mapping[typing.Callable, typing.Any] = None,
-    override: typing.Mapping[typing.Callable, typing.Any] = None,
+    cache: typing.MutableMapping[typing.Callable, typing.Any] | None = None,
+    override: typing.Mapping[typing.Callable, typing.Any] | None = None,
 ) -> typing.Any:
     """
     Synchronously inject dependencies into callable.
@@ -37,6 +37,7 @@ def inject(
 
             if not result.resolved:
                 dependency = result.dependency
+                assert dependency is not None
 
                 value = inject(
                     {**scope, "__fundi_parameter__": result.parameter},
@@ -62,8 +63,8 @@ async def ainject(
     scope: typing.Mapping[str, typing.Any],
     info: CallableInfo[typing.Any],
     stack: AsyncExitStack,
-    cache: typing.Mapping[typing.Callable, typing.Any] = None,
-    override: typing.Mapping[typing.Callable, typing.Any] = None,
+    cache: typing.MutableMapping[typing.Callable, typing.Any] | None = None,
+    override: typing.Mapping[typing.Callable, typing.Any] | None = None,
 ) -> typing.Any:
     """
     Asynchronously inject dependencies into callable.
@@ -87,6 +88,7 @@ async def ainject(
 
             if not result.resolved:
                 dependency = result.dependency
+                assert dependency is not None
 
                 value = await ainject(
                     {**scope, "__fundi_parameter__": result.parameter},

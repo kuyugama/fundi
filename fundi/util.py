@@ -8,6 +8,17 @@ from fundi.resolve import resolve
 from fundi.types import CallableInfo, InjectionTrace
 
 
+__all__ = [
+    "tree",
+    "order",
+    "_call_sync",
+    "_call_async",
+    "_callable_str",
+    "injection_trace",
+    "_add_injection_trace",
+]
+
+
 def _callable_str(call: typing.Callable) -> str:
     if hasattr(call, "__qualname__"):
         name = call.__qualname__
