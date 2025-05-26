@@ -3,7 +3,7 @@ from contextlib import ExitStack, AsyncExitStack
 
 from fundi.resolve import resolve
 from fundi.types import CallableInfo
-from fundi.util import _call_sync, _call_async, _add_injection_trace
+from fundi.util import call_sync, call_async, add_injection_trace
 
 
 def inject(
@@ -52,10 +52,10 @@ def inject(
 
             values[name] = value
 
-        return _call_sync(stack, info, values)
+        return call_sync(stack, info, values)
 
     except Exception as exc:
-        _add_injection_trace(exc, info, values)
+        add_injection_trace(exc, info, values)
         raise exc
 
 
@@ -104,9 +104,9 @@ async def ainject(
             values[name] = value
 
         if not info.async_:
-            return _call_sync(stack, info, values)
+            return call_sync(stack, info, values)
 
-        return await _call_async(stack, info, values)
+        return await call_async(stack, info, values)
     except Exception as exc:
-        _add_injection_trace(exc, info, values)
+        add_injection_trace(exc, info, values)
         raise exc

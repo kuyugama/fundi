@@ -8,15 +8,15 @@ from fundi.types import CallableInfo, InjectionTrace
 
 
 __all__ = [
-    "_call_sync",
-    "_call_async",
-    "_callable_str",
+    "call_sync",
+    "call_async",
+    "callable_str",
     "injection_trace",
-    "_add_injection_trace",
+    "add_injection_trace",
 ]
 
 
-def _callable_str(call: typing.Callable) -> str:
+def callable_str(call: typing.Callable[..., typing.Any]) -> str:
     if hasattr(call, "__qualname__"):
         name = call.__qualname__
     elif hasattr(call, "__name__"):
@@ -31,8 +31,8 @@ def _callable_str(call: typing.Callable) -> str:
     return f"<{name} from {module_name}>"
 
 
-def _add_injection_trace(
     exception: Exception, info: CallableInfo, values: typing.Mapping[str, typing.Any]
+def add_injection_trace(
 ) -> None:
     setattr(
         exception,
@@ -41,7 +41,7 @@ def _add_injection_trace(
     )
 
 
-def _call_sync(
+def call_sync(
     stack: ExitStack | AsyncExitStack,
     info: CallableInfo[typing.Any],
     values: typing.Mapping[str, typing.Any],
@@ -90,8 +90,8 @@ def _call_sync(
     return value
 
 
-async def _call_async(
     stack: AsyncExitStack, info: CallableInfo[typing.Any], values: typing.Mapping[str, typing.Any]
+async def call_async(
 ) -> typing.Any:
     """
     Asynchronously call dependency callable.
