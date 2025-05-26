@@ -1,8 +1,8 @@
 import typing as _typing
 
 from .scan import scan
-from . import exceptions
 from .from_ import from_
+from . import exceptions
 from .resolve import resolve
 from .debug import tree, order
 from .util import injection_trace

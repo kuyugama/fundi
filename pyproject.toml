@@ -39,3 +39,8 @@ filterwarnings = [
     "ignore::DeprecationWarning"
 ]
 
+[tool.pyright]
+reportAny = false
+reportUnusedCallResult = false
+exclude = [".venv"]
+

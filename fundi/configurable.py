@@ -23,7 +23,7 @@ def configurable_dependency(configurator: typing.Callable[P, R]) -> typing.Calla
     :param configurator: Original dependency configurator
     :return: cache aware dependency configurator
     """
-    dependencies: dict[tuple[tuple, frozenset], R] = {}
+    dependencies: dict[tuple[tuple[typing.Any, ...], frozenset[tuple[str, typing.Any]]], R] = {}
     info = scan(configurator)
 
     if info.async_:

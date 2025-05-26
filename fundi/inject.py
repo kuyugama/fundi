@@ -1,4 +1,5 @@
 import typing
+import collections.abc
 from contextlib import ExitStack, AsyncExitStack
 
 from fundi.resolve import resolve
@@ -7,11 +8,13 @@ from fundi.util import call_sync, call_async, add_injection_trace
 
 
 def inject(
-    scope: typing.Mapping[str, typing.Any],
+    scope: collections.abc.Mapping[str, typing.Any],
     info: CallableInfo[typing.Any],
     stack: ExitStack,
-    cache: typing.MutableMapping[typing.Callable, typing.Any] | None = None,
-    override: typing.Mapping[typing.Callable, typing.Any] | None = None,
+    cache: (
+        collections.abc.MutableMapping[typing.Callable[..., typing.Any], typing.Any] | None
+    ) = None,
+    override: collections.abc.Mapping[typing.Callable[..., typing.Any], typing.Any] | None = None,
 ) -> typing.Any:
     """
     Synchronously inject dependencies into callable.
@@ -29,7 +32,7 @@ def inject(
     if cache is None:
         cache = {}
 
-    values = {}
+    values: dict[str, typing.Any] = {}
     try:
         for result in resolve(scope, info, cache, override):
             name = result.parameter.name
@@ -60,11 +63,13 @@ def inject(
 
 
 async def ainject(
-    scope: typing.Mapping[str, typing.Any],
+    scope: collections.abc.Mapping[str, typing.Any],
     info: CallableInfo[typing.Any],
     stack: AsyncExitStack,
-    cache: typing.MutableMapping[typing.Callable, typing.Any] | None = None,
-    override: typing.Mapping[typing.Callable, typing.Any] | None = None,
+    cache: (
+        collections.abc.MutableMapping[typing.Callable[..., typing.Any], typing.Any] | None
+    ) = None,
+    override: collections.abc.Mapping[typing.Callable[..., typing.Any], typing.Any] | None = None,
 ) -> typing.Any:
     """
     Asynchronously inject dependencies into callable.
@@ -79,7 +84,7 @@ async def ainject(
     if cache is None:
         cache = {}
 
-    values = {}
+    values: dict[str, typing.Any] = {}
 
     try:
         for result in resolve(scope, info, cache, override):

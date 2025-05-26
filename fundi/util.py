@@ -1,6 +1,7 @@
 import typing
 import inspect
 import warnings
+import collections.abc
 from types import TracebackType
 from contextlib import AsyncExitStack, ExitStack
 
@@ -31,8 +32,10 @@ def callable_str(call: typing.Callable[..., typing.Any]) -> str:
     return f"<{name} from {module_name}>"
 
 
-    exception: Exception, info: CallableInfo, values: typing.Mapping[str, typing.Any]
 def add_injection_trace(
+    exception: Exception,
+    info: CallableInfo[typing.Any],
+    values: collections.abc.Mapping[str, typing.Any],
 ) -> None:
     setattr(
         exception,
@@ -44,7 +47,7 @@ def add_injection_trace(
 def call_sync(
     stack: ExitStack | AsyncExitStack,
     info: CallableInfo[typing.Any],
-    values: typing.Mapping[str, typing.Any],
+    values: collections.abc.Mapping[str, typing.Any],
 ) -> typing.Any:
     """
     Synchronously call dependency callable.
@@ -57,7 +60,7 @@ def call_sync(
     value = info.call(**values)
 
     if info.generator:
-        generator: typing.Generator = value
+        generator: collections.abc.Generator[typing.Any, None, None] = value
         value = next(generator)
 
         def close_generator(
@@ -90,8 +93,10 @@ def call_sync(
     return value
 
 
-    stack: AsyncExitStack, info: CallableInfo[typing.Any], values: typing.Mapping[str, typing.Any]
 async def call_async(
+    stack: AsyncExitStack,
+    info: CallableInfo[typing.Any],
+    values: collections.abc.Mapping[str, typing.Any],
 ) -> typing.Any:
     """
     Asynchronously call dependency callable.
@@ -104,7 +109,7 @@ async def call_async(
     value = info.call(**values)
 
     if info.generator:
-        generator: typing.AsyncGenerator = value
+        generator: collections.abc.AsyncGenerator[typing.Any] = value
         value = await anext(generator)
 
         async def close_generator(
