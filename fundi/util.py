@@ -4,13 +4,10 @@ import warnings
 from types import TracebackType
 from contextlib import AsyncExitStack, ExitStack
 
-from fundi.resolve import resolve
 from fundi.types import CallableInfo, InjectionTrace
 
 
 __all__ = [
-    "tree",
-    "order",
     "_call_sync",
     "_call_async",
     "_callable_str",
@@ -154,71 +151,3 @@ def injection_trace(exception: Exception) -> InjectionTrace:
         raise ValueError(f"Exception {exception} does not contain injection trace")
 
     return typing.cast(InjectionTrace, getattr(exception, "__fundi_injection_trace__"))
-
-
-def tree(
-    scope: typing.Mapping[str, typing.Any],
-    info: CallableInfo,
-    cache: typing.MutableMapping[typing.Callable, typing.Mapping[str, typing.Any]] | None = None,
-) -> typing.Mapping[str, typing.Any]:
-    """
-    Get tree of dependencies of callable.
-
-    :param scope: container with contextual values
-    :param info: callable information
-    :param cache: tree generation cache
-    :return: Tree of dependencies
-    """
-    if cache is None:
-        cache = {}
-
-    values = {}
-
-    for result in resolve(scope, info, cache):
-        name = result.parameter.name
-        value = result.value
-
-        if not result.resolved:
-            assert result.dependency is not None
-            value = tree(
-                {**scope, "__fundi_parameter__": result.parameter}, result.dependency, cache
-            )
-
-            if result.dependency.use_cache:
-                cache[result.dependency.call] = value
-
-        values[name] = value
-
-    return {"call": info.call, "values": values}
-
-
-def order(
-    scope: typing.Mapping[str, typing.Any],
-    info: CallableInfo[typing.Any],
-    cache: typing.MutableMapping[typing.Callable, list[typing.Callable]] | None = None,
-) -> list[typing.Callable]:
-    """
-    Get resolving order of callable dependencies.
-
-    :param info: callable information
-    :param scope: container with contextual values
-    :param cache: solvation cache
-    :return: order of dependencies
-    """
-    if cache is None:
-        cache = {}
-
-    order_ = []
-
-    for result in resolve(scope, info, cache):
-        if not result.resolved:
-            assert result.dependency is not None
-
-            value = order(scope, result.dependency, cache)
-            order_.extend(value)
-            order_.append(result.dependency.call)
-
-            if result.dependency.use_cache:
-                cache[result.dependency.call] = value
-
-    return order_
