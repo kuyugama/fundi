@@ -4,7 +4,7 @@ import functools
 
 from fundi.types import R
 from fundi.scan import scan
-from fundi.util import _callable_str
+from fundi.util import callable_str
 
 P = typing.ParamSpec("P")
 
@@ -23,7 +23,7 @@ def configurable_dependency(configurator: typing.Callable[P, R]) -> typing.Calla
     :param configurator: Original dependency configurator
     :return: cache aware dependency configurator
     """
-    dependencies: dict[tuple[tuple, frozenset], R] = {}
+    dependencies: dict[tuple[tuple[typing.Any, ...], frozenset[tuple[str, typing.Any]]], R] = {}
     info = scan(configurator)
 
     if info.async_:
@@ -38,7 +38,7 @@ def configurable_dependency(configurator: typing.Callable[P, R]) -> typing.Calla
             hash(key)
         except TypeError:
             warnings.warn(
-                f"Can't cache dependency created via {_callable_str(configurator)}: configured with unhashable arguments",
+                f"Can't cache dependency created via {callable_str(configurator)}: configured with unhashable arguments",
                 MutableConfigurationWarning,
             )
             use_cache = False

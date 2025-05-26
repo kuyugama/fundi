@@ -1,4 +1,6 @@
 import typing
+import collections
+import collections.abc
 from dataclasses import dataclass
 
 __all__ = ["R", "TypeResolver", "Parameter", "CallableInfo", "ParameterResult", "InjectionTrace"]
@@ -22,7 +24,7 @@ class TypeResolver:
 class Parameter:
     name: str
     annotation: type
-    from_: "CallableInfo | None"
+    from_: "CallableInfo[typing.Any] | None"
     default: typing.Any = None
     has_default: bool = False
     resolve_by_type: bool = False
@@ -30,7 +32,7 @@ class Parameter:
 
 @dataclass
 class CallableInfo(typing.Generic[R]):
-    call: typing.Callable[..., typing.Any]
+    call: typing.Callable[..., R]
     use_cache: bool
     async_: bool
     generator: bool
@@ -41,12 +43,12 @@ class CallableInfo(typing.Generic[R]):
 class ParameterResult:
     parameter: Parameter
     value: typing.Any | None
-    dependency: CallableInfo | None
+    dependency: CallableInfo[typing.Any] | None
     resolved: bool
 
 
 @dataclass
 class InjectionTrace:
-    info: CallableInfo
-    values: typing.Mapping[str, typing.Any]
+    info: CallableInfo[typing.Any]
+    values: collections.abc.Mapping[str, typing.Any]
     origin: "InjectionTrace | None" = None

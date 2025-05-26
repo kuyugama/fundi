@@ -1,12 +1,14 @@
+import types
 import typing
+import collections.abc
 
 from fundi.types import CallableInfo, ParameterResult, Parameter
 
 
 def resolve_by_dependency(
     param: Parameter,
-    cache: typing.Mapping[typing.Callable, typing.Any],
-    override: typing.Mapping[typing.Callable, typing.Any],
+    cache: collections.abc.Mapping[typing.Callable[..., typing.Any], typing.Any],
+    override: collections.abc.Mapping[typing.Callable[..., typing.Any], typing.Any],
 ) -> ParameterResult:
     dependency = param.from_
 
@@ -15,7 +17,9 @@ def resolve_by_dependency(
     value = override.get(dependency.call)
     if value is not None:
         if isinstance(value, CallableInfo):
-            return ParameterResult(param, None, value, resolved=False)
+            return ParameterResult(
+                param, None, typing.cast(CallableInfo[typing.Any], value), resolved=False
+            )
 
         return ParameterResult(param, value, dependency, resolved=True)
 
@@ -25,13 +29,15 @@ def resolve_by_dependency(
     return ParameterResult(param, None, dependency, resolved=False)
 
 
-def resolve_by_type(scope: typing.Mapping[str, typing.Any], param: Parameter) -> ParameterResult:
+def resolve_by_type(
+    scope: collections.abc.Mapping[str, typing.Any], param: Parameter
+) -> ParameterResult:
     annotation = param.annotation
 
     type_options = (annotation,)
 
     origin = typing.get_origin(annotation)
-    if origin is typing.Union:
+    if origin is types.UnionType:
         type_options = tuple(t for t in typing.get_args(annotation) if t is not None)
     elif origin is not None:
         type_options = (origin,)
@@ -46,11 +52,11 @@ def resolve_by_type(scope: typing.Mapping[str, typing.Any], param: Parameter) ->
 
 
 def resolve(
-    scope: typing.Mapping[str, typing.Any],
-    info: CallableInfo,
-    cache: typing.Mapping[typing.Callable, typing.Any],
-    override: typing.Mapping[typing.Callable, typing.Any] | None = None,
-) -> typing.Generator[ParameterResult, None, None]:
+    scope: collections.abc.Mapping[str, typing.Any],
+    info: CallableInfo[typing.Any],
+    cache: collections.abc.Mapping[typing.Callable[..., typing.Any], typing.Any],
+    override: collections.abc.Mapping[typing.Callable[..., typing.Any], typing.Any] | None = None,
+) -> collections.abc.Generator[ParameterResult, None, None]:
     """
     Try to resolve values from cache or scope for callable parameters
 

@@ -13,11 +13,17 @@ def scan(call: typing.Callable[..., R], caching: bool = True) -> CallableInfo[R]
 
     :return: callable information
     """
-    params = []
+    params: list[Parameter] = []
 
     for param in inspect.signature(call).parameters.values():
         if isinstance(param.default, CallableInfo):
-            params.append(Parameter(param.name, param.annotation, from_=param.default))
+            params.append(
+                Parameter(
+                    param.name,
+                    param.annotation,
+                    from_=typing.cast(CallableInfo[typing.Any], param.default),
+                )
+            )
             continue
 
         has_default = param.default is not inspect.Parameter.empty
@@ -46,9 +52,14 @@ def scan(call: typing.Callable[..., R], caching: bool = True) -> CallableInfo[R]
             )
         )
 
-    async_ = inspect.iscoroutinefunction(call) or inspect.isasyncgenfunction(call)
-    generator = inspect.isgeneratorfunction(call) or inspect.isasyncgenfunction(call)
+    async_: bool = inspect.iscoroutinefunction(call) or inspect.isasyncgenfunction(call)
+    generator: bool = inspect.isgeneratorfunction(call) or inspect.isasyncgenfunction(call)
 
-    return CallableInfo(
-        call=call, use_cache=caching, async_=async_, generator=generator, parameters=params
+    info = typing.cast(
+        CallableInfo[R],
+        CallableInfo(
+            call=call, use_cache=caching, async_=async_, generator=generator, parameters=params
+        ),
     )
+
+    return info

@@ -1,12 +1,12 @@
 import typing
 
 from fundi.scan import scan
-from fundi.types import CallableInfo, TypeResolver, R
+from fundi.types import CallableInfo, TypeResolver
 
 
 def from_(
     dependency: type | typing.Callable[..., typing.Any], caching: bool = True
-) -> TypeResolver | CallableInfo:
+) -> TypeResolver | CallableInfo[typing.Any]:
     """
     Use callable or type as dependency for parameter of function
 

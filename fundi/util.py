@@ -1,25 +1,23 @@
 import typing
 import inspect
 import warnings
+import collections.abc
 from types import TracebackType
 from contextlib import AsyncExitStack, ExitStack
 
-from fundi.resolve import resolve
 from fundi.types import CallableInfo, InjectionTrace
 
 
 __all__ = [
-    "tree",
-    "order",
-    "_call_sync",
-    "_call_async",
-    "_callable_str",
+    "call_sync",
+    "call_async",
+    "callable_str",
     "injection_trace",
-    "_add_injection_trace",
+    "add_injection_trace",
 ]
 
 
-def _callable_str(call: typing.Callable) -> str:
+def callable_str(call: typing.Callable[..., typing.Any]) -> str:
     if hasattr(call, "__qualname__"):
         name = call.__qualname__
     elif hasattr(call, "__name__"):
@@ -34,8 +32,10 @@ def _callable_str(call: typing.Callable) -> str:
     return f"<{name} from {module_name}>"
 
 
-def _add_injection_trace(
-    exception: Exception, info: CallableInfo, values: typing.Mapping[str, typing.Any]
+def add_injection_trace(
+    exception: Exception,
+    info: CallableInfo[typing.Any],
+    values: collections.abc.Mapping[str, typing.Any],
 ) -> None:
     setattr(
         exception,
@@ -44,10 +44,10 @@ def _add_injection_trace(
     )
 
 
-def _call_sync(
+def call_sync(
     stack: ExitStack | AsyncExitStack,
     info: CallableInfo[typing.Any],
-    values: typing.Mapping[str, typing.Any],
+    values: collections.abc.Mapping[str, typing.Any],
 ) -> typing.Any:
     """
     Synchronously call dependency callable.
@@ -60,7 +60,7 @@ def _call_sync(
     value = info.call(**values)
 
     if info.generator:
-        generator: typing.Generator = value
+        generator: collections.abc.Generator[typing.Any, None, None] = value
         value = next(generator)
 
         def close_generator(
@@ -93,8 +93,10 @@ def _call_sync(
     return value
 
 
-async def _call_async(
-    stack: AsyncExitStack, info: CallableInfo[typing.Any], values: typing.Mapping[str, typing.Any]
+async def call_async(
+    stack: AsyncExitStack,
+    info: CallableInfo[typing.Any],
+    values: collections.abc.Mapping[str, typing.Any],
 ) -> typing.Any:
     """
     Asynchronously call dependency callable.
@@ -107,7 +109,7 @@ async def _call_async(
     value = info.call(**values)
 
     if info.generator:
-        generator: typing.AsyncGenerator = value
+        generator: collections.abc.AsyncGenerator[typing.Any] = value
         value = await anext(generator)
 
         async def close_generator(
@@ -154,71 +156,3 @@ def injection_trace(exception: Exception) -> InjectionTrace:
         raise ValueError(f"Exception {exception} does not contain injection trace")
 
     return typing.cast(InjectionTrace, getattr(exception, "__fundi_injection_trace__"))
-
-
-def tree(
-    scope: typing.Mapping[str, typing.Any],
-    info: CallableInfo,
-    cache: typing.MutableMapping[typing.Callable, typing.Mapping[str, typing.Any]] | None = None,
-) -> typing.Mapping[str, typing.Any]:
-    """
-    Get tree of dependencies of callable.
-
-    :param scope: container with contextual values
-    :param info: callable information
-    :param cache: tree generation cache
-    :return: Tree of dependencies
-    """
-    if cache is None:
-        cache = {}
-
-    values = {}
-
-    for result in resolve(scope, info, cache):
-        name = result.parameter.name
-        value = result.value
-
-        if not result.resolved:
-            assert result.dependency is not None
-            value = tree(
-                {**scope, "__fundi_parameter__": result.parameter}, result.dependency, cache
-            )
-
-            if result.dependency.use_cache:
-                cache[result.dependency.call] = value
-
-        values[name] = value
-
-    return {"call": info.call, "values": values}
-
-
-def order(
-    scope: typing.Mapping[str, typing.Any],
-    info: CallableInfo[typing.Any],
-    cache: typing.MutableMapping[typing.Callable, list[typing.Callable]] | None = None,
-) -> list[typing.Callable]:
-    """
-    Get resolving order of callable dependencies.
-
-    :param info: callable information
-    :param scope: container with contextual values
-    :param cache: solvation cache
-    :return: order of dependencies
-    """
-    if cache is None:
-        cache = {}
-
-    order_ = []
-
-    for result in resolve(scope, info, cache):
-        if not result.resolved:
-            assert result.dependency is not None
-
-            value = order(scope, result.dependency, cache)
-            order_.extend(value)
-            order_.append(result.dependency.call)
-
-            if result.dependency.use_cache:
-                cache[result.dependency.call] = value
-
-    return order_
