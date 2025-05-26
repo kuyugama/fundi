@@ -17,7 +17,9 @@ def resolve_by_dependency(
     value = override.get(dependency.call)
     if value is not None:
         if isinstance(value, CallableInfo):
-            return ParameterResult(param, None, dependency, resolved=False)
+            return ParameterResult(
+                param, None, typing.cast(CallableInfo[typing.Any], value), resolved=False
+            )
 
         return ParameterResult(param, value, dependency, resolved=True)
 
