@@ -42,6 +42,7 @@ filterwarnings = [
 [tool.pyright]
 reportAny = false
 reportUnusedCallResult = false
+reportCallInDefaultInitializer = false
 exclude = [".venv"]
 
 [tool.black]
