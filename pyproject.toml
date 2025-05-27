@@ -44,3 +44,6 @@ reportAny = false
 reportUnusedCallResult = false
 exclude = [".venv"]
 
+[tool.black]
+line-length=100
+
