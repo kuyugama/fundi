@@ -10,7 +10,7 @@ license-files = ["LICENSE", "LICENSE.md"]
 classifiers = ["Programming Language :: Python :: 3"]
 
 [project.urls]
-homepage = "https://github.com/kuyugama/fundi"
+homepage = "https://github.com/KuyuCode/fundi"
 
 [dependency-groups]
 docs = [
