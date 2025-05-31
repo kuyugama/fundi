@@ -21,9 +21,10 @@ docs = [
 ]
 dev = [
     "black>=25.1.0",
+    "pynvim>=0.5.2",
     "pytest>=8.3.5",
     "pytest-asyncio>=0.26.0",
-    { include-group = "docs" }
+    { include-group = "docs" },
 ]
 
 [tool.pytest.ini_options]
