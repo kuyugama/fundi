@@ -22,6 +22,8 @@ def scan(call: typing.Callable[..., R], caching: bool = True) -> CallableInfo[R]
                     param.name,
                     param.annotation,
                     from_=typing.cast(CallableInfo[typing.Any], param.default),
+                    positional_only=param.kind == inspect.Parameter.POSITIONAL_ONLY,
+                    keyword_only=param.kind == inspect.Parameter.KEYWORD_ONLY,
                 )
             )
             continue
@@ -49,6 +51,8 @@ def scan(call: typing.Callable[..., R], caching: bool = True) -> CallableInfo[R]
                 default=param.default if has_default else None,
                 has_default=has_default,
                 resolve_by_type=resolve_by_type,
+                positional_only=param.kind == inspect.Parameter.POSITIONAL_ONLY,
+                keyword_only=param.kind == inspect.Parameter.KEYWORD_ONLY,
             )
         )
 

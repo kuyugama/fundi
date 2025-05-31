@@ -57,7 +57,8 @@ def call_sync(
     :param values: callable arguments
     :return: callable result
     """
-    value = info.call(**values)
+    args, kwargs = info.build_arguments(values)
+    value = info.call(*args, **kwargs)
 
     if info.generator:
         generator: collections.abc.Generator[typing.Any, None, None] = value
@@ -106,7 +107,9 @@ async def call_async(
     :param values: callable arguments
     :return: callable result
     """
-    value = info.call(**values)
+    args, kwargs = info.build_arguments(values)
+
+    value = info.call(*args, **kwargs)
 
     if info.generator:
         generator: collections.abc.AsyncGenerator[typing.Any] = value

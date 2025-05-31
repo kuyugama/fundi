@@ -183,3 +183,23 @@ def test_dependency_parameter_awareness():
 
     with ExitStack() as stack:
         inject({}, scan(func), stack)
+
+
+def test_positional_only():
+    def dep(arg: str, /):
+        return arg
+
+    with ExitStack() as stack:
+        result = inject({"arg": "argValue"}, scan(dep), stack)
+
+        assert result == "argValue"
+
+
+def test_keyword_only():
+    def dep(*, arg: str):
+        return arg
+
+    with ExitStack() as stack:
+        result = inject({"arg": "argValue"}, scan(dep), stack)
+
+        assert result == "argValue"
