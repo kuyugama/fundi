@@ -93,6 +93,14 @@ based on provided arguments to them:
   Also, :code:`configurable_dependency` decorator does not cache dependencies configured with mutable arguments.
 
 
+To check whether dependency is configured by @configurable_dependency use ``is_configured(call)`` function:
+
+.. literalinclude:: ../examples/configurable_check.py
+
+
+To get dependency configuration use ``get_configuration(call)`` function:
+
+.. literalinclude:: ../examples/configurable_config.py
 
 Composite dependencies
 ======================
