@@ -5,10 +5,10 @@ from .from_ import from_
 from . import exceptions
 from .resolve import resolve
 from .debug import tree, order
-from .util import injection_trace
 from .inject import inject, ainject
-from .types import CallableInfo, TypeResolver, InjectionTrace, R, Parameter
+from .util import injection_trace, is_configured, get_configuration
 from .configurable import configurable_dependency, MutableConfigurationWarning
+from .types import CallableInfo, TypeResolver, InjectionTrace, R, Parameter, DependencyConfiguration
 
 
 FromType: _typing.TypeAlias = _typing.Annotated[R, TypeResolver]
@@ -26,8 +26,11 @@ __all__ = [
     "exceptions",
     "CallableInfo",
     "TypeResolver",
+    "is_configured",
     "InjectionTrace",
     "injection_trace",
+    "get_configuration",
+    "DependencyConfiguration",
     "configurable_dependency",
     "MutableConfigurationWarning",
 ]

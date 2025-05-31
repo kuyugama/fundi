@@ -5,14 +5,16 @@ import collections.abc
 from types import TracebackType
 from contextlib import AsyncExitStack, ExitStack
 
-from fundi.types import CallableInfo, InjectionTrace
+from fundi.types import CallableInfo, InjectionTrace, DependencyConfiguration
 
 
 __all__ = [
     "call_sync",
     "call_async",
     "callable_str",
+    "is_configured",
     "injection_trace",
+    "get_configuration",
     "add_injection_trace",
 ]
 
@@ -159,3 +161,27 @@ def injection_trace(exception: Exception) -> InjectionTrace:
         raise ValueError(f"Exception {exception} does not contain injection trace")
 
     return typing.cast(InjectionTrace, getattr(exception, "__fundi_injection_trace__"))
+
+
+def is_configured(call: typing.Callable[..., typing.Any]) -> bool:
+    """
+    Get whether callable is configured via @configurable_dependency
+
+    :param call: callable to check
+    :return: Is this callable configured
+    """
+    return hasattr(call, "__fundi_configuration__")
+
+
+def get_configuration(call: typing.Callable[..., typing.Any]) -> DependencyConfiguration:
+    """
+    Get dependency configuration. Can be useful in third-party tools that needs to know configuration
+
+    :param call: callable to get configuration from
+    :return: dependency configuration
+    """
+    if not is_configured(call):
+        raise ValueError(f"Callable {call} is not configured via @configurable_dependency")
+
+    configuration: DependencyConfiguration = getattr(call, "__fundi_configuration__")
+    return configuration

@@ -1,10 +1,17 @@
 import typing
 import collections
 import collections.abc
-from dataclasses import dataclass
 from dataclasses import dataclass, field
 
-__all__ = ["R", "TypeResolver", "Parameter", "CallableInfo", "ParameterResult", "InjectionTrace"]
+__all__ = [
+    "R",
+    "Parameter",
+    "TypeResolver",
+    "CallableInfo",
+    "InjectionTrace",
+    "ParameterResult",
+    "DependencyConfiguration",
+]
 
 R = typing.TypeVar("R")
 
@@ -106,3 +113,9 @@ class InjectionTrace:
     info: CallableInfo[typing.Any]
     values: collections.abc.Mapping[str, typing.Any]
     origin: "InjectionTrace | None" = None
+
+
+@dataclass
+class DependencyConfiguration:
+    configurator: CallableInfo[typing.Any]
+    values: collections.abc.Mapping[str, typing.Any]
