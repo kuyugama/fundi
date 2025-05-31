@@ -2,9 +2,9 @@ import typing
 import warnings
 import functools
 
-from fundi.types import R
 from fundi.scan import scan
 from fundi.util import callable_str
+from fundi.types import R, DependencyConfiguration
 
 P = typing.ParamSpec("P")
 
@@ -23,7 +23,7 @@ def configurable_dependency(configurator: typing.Callable[P, R]) -> typing.Calla
     :param configurator: Original dependency configurator
     :return: cache aware dependency configurator
     """
-    dependencies: dict[tuple[tuple[typing.Any, ...], frozenset[tuple[str, typing.Any]]], R] = {}
+    dependencies: dict[frozenset[tuple[str, typing.Any]], R] = {}
     info = scan(configurator)
 
     if info.async_:
@@ -32,10 +32,14 @@ def configurable_dependency(configurator: typing.Callable[P, R]) -> typing.Calla
     @functools.wraps(configurator)
     def cached_dependency_generator(*args: typing.Any, **kwargs: typing.Any) -> R:
         use_cache = True
-        key = (args, frozenset(kwargs.items()))
+        values = info.build_values(*args, **kwargs)
+        key: frozenset[tuple[str, typing.Any]] | None = None
 
         try:
-            hash(key)
+            key = frozenset(values.items())
+
+            if key in dependencies:
+                return dependencies[key]
         except TypeError:
             warnings.warn(
                 f"Can't cache dependency created via {callable_str(configurator)}: configured with unhashable arguments",
@@ -43,13 +47,14 @@ def configurable_dependency(configurator: typing.Callable[P, R]) -> typing.Calla
             )
             use_cache = False
 
-        if use_cache and key in dependencies:
-            return dependencies[key]
-
         dependency = configurator(*args, **kwargs)
-        setattr(dependency, "__fundi_configuration__", (args, kwargs))
+        setattr(
+            dependency,
+            "__fundi_configuration__",
+            DependencyConfiguration(configurator=info, values=values),
+        )
 
-        if use_cache:
+        if use_cache and key is not None:
             dependencies[key] = dependency
 
         return dependency

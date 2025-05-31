@@ -1,3 +1,4 @@
+import inspect
 from fundi import scan, from_, FromType
 from fundi.types import Parameter
 
@@ -129,3 +130,27 @@ def test_scan_FromType():
     assert info.generator is False
     assert info.call is dep
     assert info.parameters == [Parameter("arg", Session, None, resolve_by_type=True)]
+
+
+def test_scan_positional_only():
+    def dep(arg: str, /): ...
+
+    info = scan(dep)
+
+    assert info.async_ is False
+    assert info.generator is False
+    assert info.call is dep
+    assert info.parameters == [
+        Parameter("arg", str, None, positional_only=True),
+    ]
+
+
+def test_scan_keyword_only():
+    def dep(*, arg: str): ...
+
+    info = scan(dep)
+
+    assert info.async_ is False
+    assert info.generator is False
+    assert info.call is dep
+    assert info.parameters == [Parameter("arg", str, None, keyword_only=True)]
