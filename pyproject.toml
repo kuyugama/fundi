@@ -45,6 +45,7 @@ reportAny = false
 reportUnusedCallResult = false
 reportCallInDefaultInitializer = false
 exclude = [".venv"]
+ignore = ["tests"]
 
 [tool.black]
 line-length=100
