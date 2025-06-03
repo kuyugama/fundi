@@ -16,14 +16,16 @@ def scan(call: typing.Callable[..., R], caching: bool = True) -> CallableInfo[R]
     params: list[Parameter] = []
 
     for param in inspect.signature(call).parameters.values():
+        positional_only = param.kind == inspect.Parameter.POSITIONAL_ONLY
+        keyword_only = param.kind == inspect.Parameter.KEYWORD_ONLY
         if isinstance(param.default, CallableInfo):
             params.append(
                 Parameter(
                     param.name,
                     param.annotation,
                     from_=typing.cast(CallableInfo[typing.Any], param.default),
-                    positional_only=param.kind == inspect.Parameter.POSITIONAL_ONLY,
-                    keyword_only=param.kind == inspect.Parameter.KEYWORD_ONLY,
+                    positional_only=positional_only,
+                    keyword_only=keyword_only,
                 )
             )
             continue
@@ -51,8 +53,8 @@ def scan(call: typing.Callable[..., R], caching: bool = True) -> CallableInfo[R]
                 default=param.default if has_default else None,
                 has_default=has_default,
                 resolve_by_type=resolve_by_type,
-                positional_only=param.kind == inspect.Parameter.POSITIONAL_ONLY,
-                keyword_only=param.kind == inspect.Parameter.KEYWORD_ONLY,
+                positional_only=positional_only,
+                keyword_only=keyword_only,
             )
         )
 
