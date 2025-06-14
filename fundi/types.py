@@ -31,7 +31,7 @@ class TypeResolver:
 @dataclass
 class Parameter:
     name: str
-    annotation: type
+    annotation: typing.Any
     from_: "CallableInfo[typing.Any] | None"
     default: typing.Any = None
     has_default: bool = False
@@ -47,6 +47,7 @@ class CallableInfo(typing.Generic[R]):
     async_: bool
     generator: bool
     parameters: list[Parameter]
+    return_annotation: typing.Any
     named_parameters: dict[str, Parameter] = field(init=False)
 
     def __post_init__(self):

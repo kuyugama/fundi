@@ -37,8 +37,16 @@ def resolve_by_type(
     type_options = (annotation,)
 
     origin = typing.get_origin(annotation)
+    args = typing.get_args(annotation)
+
+    if origin is typing.Annotated:
+        annotation = args[0]
+        type_options = (annotation,)
+        origin = typing.get_origin(annotation)
+        args = typing.get_args(annotation)
+
     if origin is types.UnionType:
-        type_options = tuple(t for t in typing.get_args(annotation) if t is not None)
+        type_options = tuple(t for t in args if t is not None)
     elif origin is not None:
         type_options = (origin,)
 
