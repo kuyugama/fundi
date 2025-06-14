@@ -48,6 +48,7 @@ class CallableInfo(typing.Generic[R]):
     generator: bool
     parameters: list[Parameter]
     return_annotation: typing.Any
+    configuration: "DependencyConfiguration | None"
     named_parameters: dict[str, Parameter] = field(init=False)
 
     def __post_init__(self):

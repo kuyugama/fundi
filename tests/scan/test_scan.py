@@ -1,6 +1,8 @@
+import functools
 import inspect
 from fundi import scan, from_, FromType
-from fundi.types import Parameter
+from fundi.configurable import configurable_dependency
+from fundi.types import DependencyConfiguration, Parameter
 
 
 def test_scan_no_deps():
@@ -154,3 +156,20 @@ def test_scan_keyword_only():
     assert info.generator is False
     assert info.call is dep
     assert info.parameters == [Parameter("arg", str, None, keyword_only=True)]
+
+
+def test_scan_configured():
+    @configurable_dependency
+    def dep_factory(multiplier: int):
+        return lambda rank: rank * multiplier
+
+    info = scan(dep_factory(17032026))
+
+    assert info.async_ is False
+    assert info.generator is False
+    assert info.call is dep_factory(17032026)
+    assert info.parameters == [Parameter("rank", inspect.Parameter.empty, None)]
+    assert info.configuration is not None
+    assert info.configuration == DependencyConfiguration(
+        configurator=scan(inspect.unwrap(dep_factory)), values={"multiplier": 17032026}
+    )
