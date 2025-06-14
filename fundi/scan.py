@@ -1,6 +1,7 @@
 import typing
 import inspect
 
+from fundi.util import is_configured, get_configuration
 from fundi.types import R, CallableInfo, Parameter, TypeResolver
 
 
@@ -70,6 +71,7 @@ def scan(call: typing.Callable[..., R], caching: bool = True) -> CallableInfo[R]
             generator=generator,
             parameters=params,
             return_annotation=signature.return_annotation,
+            configuration=get_configuration(call) if is_configured(call) else None,
         ),
     )
 

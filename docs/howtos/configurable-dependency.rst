@@ -28,10 +28,13 @@ Dependency configuration
 When a configurable dependency is called, FunDI stores its configuration,
 so third-party tools (e.g. routers, docs generators, validators) can extract the metadata.
 
-To check whether dependency is configured - use ``is_configured(call)`` function:
+To get configuration of already scanned(using ``fundi.scan.scan``) dependency - 
+you can use ``CallableInfo.configuration`` attribute
+
+If dependency is not scanned - use ``is_configured(call)`` function to check whether dependency is configured:
 
 .. literalinclude:: ../../examples/configurable_check.py
 
-To get dependency configuration - use ``get_configuration(call)`` function:
+And to get dependency configuration use ``get_configuration(call)``  function on dependency callable:
 
 .. literalinclude:: ../../examples/configurable_config.py
