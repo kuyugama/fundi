@@ -34,14 +34,13 @@ def scan(call: typing.Callable[..., R], caching: bool = True) -> CallableInfo[R]
         has_default = param.default is not inspect.Parameter.empty
         resolve_by_type = False
 
-        annotation: type = param.annotation
+        annotation = param.annotation
         if isinstance(annotation, TypeResolver):
             annotation = annotation.annotation
             resolve_by_type = True
 
         elif typing.get_origin(annotation) is typing.Annotated:
             args = typing.get_args(annotation)
-            annotation = args[0]
 
             if args[1] is TypeResolver:
                 resolve_by_type = True

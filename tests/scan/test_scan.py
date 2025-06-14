@@ -129,7 +129,7 @@ def test_scan_FromType():
     assert info.async_ is False
     assert info.generator is False
     assert info.call is dep
-    assert info.parameters == [Parameter("arg", Session, None, resolve_by_type=True)]
+    assert info.parameters == [Parameter("arg", FromType[Session], None, resolve_by_type=True)]
 
 
 def test_scan_positional_only():

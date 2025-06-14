@@ -31,7 +31,7 @@ class TypeResolver:
 @dataclass
 class Parameter:
     name: str
-    annotation: type
+    annotation: typing.Any
     from_: "CallableInfo[typing.Any] | None"
     default: typing.Any = None
     has_default: bool = False
