@@ -97,11 +97,11 @@ you can use ``CallableInfo.configuration`` attribute
 
 If dependency is not scanned - use ``is_configured(call)`` function to check whether dependency is configured:
 
-.. literalinclude:: ../../examples/configurable_check.py
+.. literalinclude:: ../examples/configurable_check.py
 
 And to get dependency configuration use ``get_configuration(call)``  function on dependency callable:
 
-.. literalinclude:: ../../examples/configurable_config.py
+.. literalinclude:: ../examples/configurable_config.py
 
 
 Composite dependencies
