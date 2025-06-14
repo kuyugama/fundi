@@ -92,15 +92,17 @@ based on provided arguments to them:
 
   Also, :code:`configurable_dependency` decorator does not cache dependencies configured with mutable arguments.
 
+To get configuration of already scanned(using ``fundi.scan.scan``) dependency - 
+you can use ``CallableInfo.configuration`` attribute
 
-To check whether dependency is configured by @configurable_dependency use ``is_configured(call)`` function:
+If dependency is not scanned - use ``is_configured(call)`` function to check whether dependency is configured:
 
-.. literalinclude:: ../examples/configurable_check.py
+.. literalinclude:: ../../examples/configurable_check.py
 
+And to get dependency configuration use ``get_configuration(call)``  function on dependency callable:
 
-To get dependency configuration use ``get_configuration(call)`` function:
+.. literalinclude:: ../../examples/configurable_config.py
 
-.. literalinclude:: ../examples/configurable_config.py
 
 Composite dependencies
 ======================
