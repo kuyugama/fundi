@@ -14,8 +14,9 @@ def scan(call: typing.Callable[..., R], caching: bool = True) -> CallableInfo[R]
     :return: callable information
     """
     params: list[Parameter] = []
+    signature = inspect.signature(call)
 
-    for param in inspect.signature(call).parameters.values():
+    for param in signature.parameters.values():
         positional_only = param.kind == inspect.Parameter.POSITIONAL_ONLY
         keyword_only = param.kind == inspect.Parameter.KEYWORD_ONLY
         if isinstance(param.default, CallableInfo):
@@ -64,7 +65,12 @@ def scan(call: typing.Callable[..., R], caching: bool = True) -> CallableInfo[R]
     info = typing.cast(
         CallableInfo[R],
         CallableInfo(
-            call=call, use_cache=caching, async_=async_, generator=generator, parameters=params
+            call=call,
+            use_cache=caching,
+            async_=async_,
+            generator=generator,
+            parameters=params,
+            return_annotation=signature.return_annotation,
         ),
     )
 

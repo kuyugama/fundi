@@ -47,6 +47,7 @@ class CallableInfo(typing.Generic[R]):
     async_: bool
     generator: bool
     parameters: list[Parameter]
+    return_annotation: R
     named_parameters: dict[str, Parameter] = field(init=False)
 
     def __post_init__(self):
