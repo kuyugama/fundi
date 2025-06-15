@@ -1,3 +1,4 @@
+import contextlib
 import typing
 import collections.abc
 from contextlib import ExitStack, AsyncExitStack
@@ -96,8 +97,10 @@ def inject(
 
             return call_sync(stack, inner_info, inner_scope)
     except Exception as exc:
-        add_injection_trace(exc, info, scope)
-        raise exc
+        with contextlib.suppress(StopIteration):
+            gen.throw(type(exc), exc, exc.__traceback__)
+
+        raise
 
 
 async def ainject(
@@ -139,5 +142,7 @@ async def ainject(
 
             return call_sync(stack, inner_info, inner_scope)
     except Exception as exc:
-        add_injection_trace(exc, info, scope)
-        raise exc
+        with contextlib.suppress(StopIteration):
+            gen.throw(type(exc), exc, exc.__traceback__)
+
+        raise
