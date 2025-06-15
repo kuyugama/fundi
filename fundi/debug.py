@@ -1,8 +1,8 @@
 import typing
 import collections.abc
 
-from fundi.resolve import resolve
 from fundi.types import CallableInfo
+from fundi.inject import injection_impl
 
 
 def tree(
@@ -26,23 +26,16 @@ def tree(
     if cache is None:
         cache = {}
 
-    values = {}
+    gen = injection_impl(scope, info, cache, None)
 
-    for result in resolve(scope, info, cache):
-        name = result.parameter.name
-        value = result.value
+    value = None
 
-        if not result.resolved:
-            dependency = result.dependency
-            assert dependency is not None
-            value = tree({**scope, "__fundi_parameter__": result.parameter}, dependency, cache)
+    while True:
+        inner_scope, inner_info, more = gen.send(value)
+        if not more:
+            return {"call": inner_info.call, "values": inner_scope}
 
-            if dependency.use_cache:
-                cache[dependency.call] = value
-
-        values[name] = value
-
-    return {"call": info.call, "values": values}
+        value = tree(inner_scope, inner_info, cache)
 
 
 def order(
@@ -66,17 +59,15 @@ def order(
     if cache is None:
         cache = {}
 
+    gen = injection_impl(scope, info, cache, None)
+
     order_: list[typing.Callable[..., typing.Any]] = []
 
-    for result in resolve(scope, info, cache):
-        if not result.resolved:
-            assert result.dependency is not None
+    value = None
+    while True:
+        inner_scope, inner_info, more = gen.send(value)
+        if not more:
+            return order_
 
-            value = order(scope, result.dependency, cache)
-            order_.extend(value)
-            order_.append(result.dependency.call)
-
-            if result.dependency.use_cache:
-                cache[result.dependency.call] = value
-
-    return order_
+        order_.extend(order(inner_scope, inner_info, cache))
+        order_.append(inner_info.call)
