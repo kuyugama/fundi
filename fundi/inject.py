@@ -7,7 +7,7 @@ from fundi.types import CallableInfo
 from fundi.util import call_sync, call_async, add_injection_trace
 
 
-def _inject_impl(
+def injection_impl(
     scope: collections.abc.Mapping[str, typing.Any],
     info: CallableInfo[typing.Any],
     cache: collections.abc.MutableMapping[typing.Callable[..., typing.Any], typing.Any],
@@ -82,7 +82,7 @@ def inject(
     if cache is None:
         cache = {}
 
-    gen = _inject_impl(scope, info, cache, override)
+    gen = injection_impl(scope, info, cache, override)
 
     value: typing.Any | None = None
 
@@ -122,7 +122,7 @@ async def ainject(
     if cache is None:
         cache = {}
 
-    gen = _inject_impl(scope, info, cache, override)
+    gen = injection_impl(scope, info, cache, override)
 
     value: typing.Any | None = None
 
