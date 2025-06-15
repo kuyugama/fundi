@@ -7,6 +7,56 @@ from fundi.types import CallableInfo
 from fundi.util import call_sync, call_async, add_injection_trace
 
 
+def _inject_impl(
+    scope: collections.abc.Mapping[str, typing.Any],
+    info: CallableInfo[typing.Any],
+    cache: collections.abc.MutableMapping[typing.Callable[..., typing.Any], typing.Any],
+    override: collections.abc.Mapping[typing.Callable[..., typing.Any], typing.Any] | None,
+) -> collections.abc.Generator[
+    tuple[collections.abc.Mapping[str, typing.Any], CallableInfo[typing.Any], bool],
+    typing.Any,
+    None,
+]:
+    """
+    Injection brain.
+
+    Coordinates dependency resolution for a given `CallableInfo`. For each parameter:
+
+    - If the parameter has a pre-resolved value (from scope, override, or cache) — uses it.
+    - If the parameter requires another dependency to be resolved:
+      - Yields `(scope_with_context, dependency_info, True)` to request the caller to inject it.
+      - Once the value is received — caches it if allowed.
+
+    After all parameters are resolved, yields:
+      `(resolved_values_dict, top_level_callable_info, False)`
+
+    If any error occurs during resolution, attaches injection trace and re-raises the exception.
+    """
+
+    values: dict[str, typing.Any] = {}
+    try:
+        for result in resolve(scope, info, cache, override):
+            name = result.parameter.name
+            value = result.value
+
+            if not result.resolved:
+                dependency = result.dependency
+                assert dependency is not None
+
+                value = yield {**scope, "__fundi_parameter__": result.parameter}, dependency, True
+
+                if dependency.use_cache:
+                    cache[dependency.call] = value
+
+            values[name] = value
+
+        yield values, info, False
+
+    except Exception as exc:
+        add_injection_trace(exc, info, values)
+        raise exc
+
+
 def inject(
     scope: collections.abc.Mapping[str, typing.Any],
     info: CallableInfo[typing.Any],
@@ -32,33 +82,21 @@ def inject(
     if cache is None:
         cache = {}
 
-    values: dict[str, typing.Any] = {}
+    gen = _inject_impl(scope, info, cache, override)
+
+    value: typing.Any | None = None
+
     try:
-        for result in resolve(scope, info, cache, override):
-            name = result.parameter.name
-            value = result.value
+        while True:
+            inner_scope, inner_info, more = gen.send(value)
 
-            if not result.resolved:
-                dependency = result.dependency
-                assert dependency is not None
+            if more:
+                value = inject(inner_scope, inner_info, stack, cache, override)
+                continue
 
-                value = inject(
-                    {**scope, "__fundi_parameter__": result.parameter},
-                    dependency,
-                    stack,
-                    cache,
-                    override,
-                )
-
-                if dependency.use_cache:
-                    cache[dependency.call] = value
-
-            values[name] = value
-
-        return call_sync(stack, info, values)
-
+            return call_sync(stack, inner_info, inner_scope)
     except Exception as exc:
-        add_injection_trace(exc, info, values)
+        add_injection_trace(exc, info, scope)
         raise exc
 
 
@@ -84,34 +122,22 @@ async def ainject(
     if cache is None:
         cache = {}
 
-    values: dict[str, typing.Any] = {}
+    gen = _inject_impl(scope, info, cache, override)
+
+    value: typing.Any | None = None
 
     try:
-        for result in resolve(scope, info, cache, override):
-            name = result.parameter.name
-            value = result.value
+        while True:
+            inner_scope, inner_info, more = gen.send(value)
 
-            if not result.resolved:
-                dependency = result.dependency
-                assert dependency is not None
+            if more:
+                value = await ainject(inner_scope, inner_info, stack, cache, override)
+                continue
 
-                value = await ainject(
-                    {**scope, "__fundi_parameter__": result.parameter},
-                    dependency,
-                    stack,
-                    cache,
-                    override,
-                )
+            if info.async_:
+                return await call_async(stack, inner_info, inner_scope)
 
-                if dependency.use_cache:
-                    cache[dependency.call] = value
-
-            values[name] = value
-
-        if not info.async_:
-            return call_sync(stack, info, values)
-
-        return await call_async(stack, info, values)
+            return call_sync(stack, inner_info, inner_scope)
     except Exception as exc:
-        add_injection_trace(exc, info, values)
+        add_injection_trace(exc, info, scope)
         raise exc
