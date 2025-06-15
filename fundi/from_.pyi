@@ -1,6 +1,6 @@
 import typing
 from typing import overload
-from collections.abc import Generator, AsyncGenerator, Awaitable
+from collections.abc import Awaitable, Iterable, AsyncIterable
 
 T = typing.TypeVar("T", bound=type)
 R = typing.TypeVar("R")
@@ -8,11 +8,9 @@ R = typing.TypeVar("R")
 @overload
 def from_(dependency: T, caching: bool = True) -> T: ...
 @overload
-def from_(
-    dependency: typing.Callable[..., Generator[R, None, None]], caching: bool = True
-) -> R: ...
+def from_(dependency: typing.Callable[..., Iterable[R]], caching: bool = True) -> R: ...
 @overload
-def from_(dependency: typing.Callable[..., AsyncGenerator[R, None]], caching: bool = True) -> R: ...
+def from_(dependency: typing.Callable[..., AsyncIterable[R]], caching: bool = True) -> R: ...
 @overload
 def from_(dependency: typing.Callable[..., Awaitable[R]], caching: bool = True) -> R: ...
 @overload
