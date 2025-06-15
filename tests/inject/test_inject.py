@@ -138,6 +138,31 @@ def test_injection_trace():
             assert trace.origin.info.call is dep
 
 
+def test_injection_trace_values():
+    def dep(arg: str):
+        raise RuntimeError()
+
+    def application(app_name: str, value=from_(dep)): ...
+
+    try:
+        with ExitStack() as stack:
+            inject({"arg": "string", "app_name": "Kuyu's App"}, scan(application), stack)
+    except RuntimeError as exc:
+        trace = injection_trace(exc)
+
+        assert isinstance(trace, InjectionTrace)
+
+        assert trace.info.call is application
+        assert trace.values == {"app_name": "Kuyu's App"}
+
+        dep_trace = trace.origin
+
+        assert dep_trace is not None
+
+        assert dep_trace.info.call is dep
+        assert dep_trace.values == {"arg": "string"}
+
+
 def test_generator_exception_awareness():
     dependency_state = None
 
