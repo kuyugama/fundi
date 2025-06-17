@@ -6,8 +6,8 @@ from . import exceptions
 from .resolve import resolve
 from .debug import tree, order
 from .inject import inject, ainject
-from .util import injection_trace, is_configured, get_configuration
 from .configurable import configurable_dependency, MutableConfigurationWarning
+from .util import injection_trace, is_configured, get_configuration, normalize_annotation
 from .types import CallableInfo, TypeResolver, InjectionTrace, R, Parameter, DependencyConfiguration
 
 
@@ -30,6 +30,7 @@ __all__ = [
     "InjectionTrace",
     "injection_trace",
     "get_configuration",
+    "normalize_annotation",
     "DependencyConfiguration",
     "configurable_dependency",
     "MutableConfigurationWarning",

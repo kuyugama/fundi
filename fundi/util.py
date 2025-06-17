@@ -1,3 +1,4 @@
+import types
 import typing
 import inspect
 import warnings
@@ -16,6 +17,7 @@ __all__ = [
     "injection_trace",
     "get_configuration",
     "add_injection_trace",
+    "normalize_annotation",
 ]
 
 
@@ -185,3 +187,26 @@ def get_configuration(call: typing.Callable[..., typing.Any]) -> DependencyConfi
 
     configuration: DependencyConfiguration = getattr(call, "__fundi_configuration__")
     return configuration
+
+
+def normalize_annotation(annotation: typing.Any) -> tuple[type[typing.Any], ...]:
+    """
+    Normalize type annotation to make it easily work with
+    """
+    type_options: tuple[type, ...] = (annotation,)
+
+    origin = typing.get_origin(annotation)
+    args = typing.get_args(annotation)
+
+    if origin is typing.Annotated:
+        annotation = args[0]
+        type_options = (annotation,)
+        origin = typing.get_origin(annotation)
+        args = typing.get_args(annotation)
+
+    if origin is types.UnionType:
+        type_options = tuple(t for t in args if t is not types.NoneType)
+    elif origin is not None:
+        type_options = (origin,)
+
+    return type_options

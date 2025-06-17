@@ -1,7 +1,7 @@
-import types
 import typing
 import collections.abc
 
+from fundi.util import normalize_annotation
 from fundi.types import CallableInfo, ParameterResult, Parameter
 
 
@@ -32,23 +32,7 @@ def resolve_by_dependency(
 def resolve_by_type(
     scope: collections.abc.Mapping[str, typing.Any], param: Parameter
 ) -> ParameterResult:
-    annotation = param.annotation
-
-    type_options = (annotation,)
-
-    origin = typing.get_origin(annotation)
-    args = typing.get_args(annotation)
-
-    if origin is typing.Annotated:
-        annotation = args[0]
-        type_options = (annotation,)
-        origin = typing.get_origin(annotation)
-        args = typing.get_args(annotation)
-
-    if origin is types.UnionType:
-        type_options = tuple(t for t in args if t is not None)
-    elif origin is not None:
-        type_options = (origin,)
+    type_options = normalize_annotation(param.annotation)
 
     for value in scope.values():
         if not isinstance(value, type_options):
