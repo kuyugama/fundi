@@ -1,5 +1,6 @@
 import functools
 import inspect
+from types import TracebackType
 from fundi import scan, from_, FromType
 from fundi.configurable import configurable_dependency
 from fundi.types import DependencyConfiguration, Parameter
@@ -173,3 +174,53 @@ def test_scan_configured():
     assert info.configuration == DependencyConfiguration(
         configurator=scan(inspect.unwrap(dep_factory)), values={"multiplier": 17032026}
     )
+
+
+def test_scan_context():
+    class dep:
+        def __init__(self, name: str):
+            pass
+
+        def __enter__(self):
+            return "value"
+
+        def __exit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc_val: BaseException | None,
+            exc_tb: TracebackType | None,
+        ):
+            return False
+
+    info = scan(dep)
+
+    assert info.async_ is False
+    assert info.generator is False
+    assert info.context is True
+    assert info.call is dep
+    assert info.parameters == [Parameter("name", str, None)]
+
+
+def test_scan_async_context():
+    class dep:
+        def __init__(self, name: str):
+            pass
+
+        async def __aenter__(self):
+            return "value"
+
+        async def __aexit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc_val: BaseException | None,
+            exc_tb: TracebackType | None,
+        ):
+            return False
+
+    info = scan(dep)
+
+    assert info.async_ is True
+    assert info.generator is False
+    assert info.context is True
+    assert info.call is dep
+    assert info.parameters == [Parameter("name", str, None)]

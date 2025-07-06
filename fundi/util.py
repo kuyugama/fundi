@@ -2,6 +2,7 @@ import types
 import typing
 import inspect
 import warnings
+import contextlib
 import collections.abc
 from types import TracebackType
 from contextlib import AsyncExitStack, ExitStack
@@ -64,6 +65,29 @@ def call_sync(
     args, kwargs = info.build_arguments(values)
     value = info.call(*args, **kwargs)
 
+    if info.context:
+        manager: contextlib.AbstractContextManager[typing.Any] = value
+        value = manager.__enter__()
+
+        def exit_context(
+            exc_type: type[BaseException] | None,
+            exc_value: BaseException | None,
+            tb: TracebackType | None,
+        ) -> bool:
+            try:
+                manager.__exit__(exc_type, exc_value, tb)
+            except Exception as e:
+                # Do not include re-raise of this exception in traceback to make it cleaner
+                if e is exc_value:
+                    return False
+
+                raise
+
+            # DO NOT ALLOW LIFESPAN DEPENDENCIES TO IGNORE EXCEPTIONS
+            return exc_type is None
+
+        stack.push(exit_context)
+
     if info.generator:
         generator: collections.abc.Generator[typing.Any, None, None] = value
         value = next(generator)
@@ -115,7 +139,30 @@ async def call_async(
 
     value = info.call(*args, **kwargs)
 
-    if info.generator:
+    if info.context:
+        manager: contextlib.AbstractAsyncContextManager[typing.Any] = value
+        value = await manager.__aenter__()
+
+        async def exit_context(
+            exc_type: type[BaseException] | None,
+            exc_value: BaseException | None,
+            tb: TracebackType | None,
+        ) -> bool:
+            try:
+                await manager.__aexit__(exc_type, exc_value, tb)
+            except Exception as e:
+                # Do not include re-raise of this exception in traceback to make it cleaner
+                if e is exc_value:
+                    return False
+
+                raise
+
+            # DO NOT ALLOW LIFESPAN DEPENDENCIES TO IGNORE EXCEPTIONS
+            return exc_type is None
+
+        stack.push_async_exit(exit_context)
+
+    elif info.generator:
         generator: collections.abc.AsyncGenerator[typing.Any] = value
         value = await anext(generator)
 

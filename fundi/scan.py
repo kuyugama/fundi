@@ -5,6 +5,45 @@ from fundi.util import is_configured, get_configuration
 from fundi.types import R, CallableInfo, Parameter, TypeResolver
 
 
+def _transform_parameter(parameter: inspect.Parameter) -> Parameter:
+    positional_only = parameter.kind == inspect.Parameter.POSITIONAL_ONLY
+    keyword_only = parameter.kind == inspect.Parameter.KEYWORD_ONLY
+
+    if isinstance(parameter.default, CallableInfo):
+        return Parameter(
+            parameter.name,
+            parameter.annotation,
+            from_=typing.cast(CallableInfo[typing.Any], parameter.default),
+            positional_only=positional_only,
+            keyword_only=keyword_only,
+        )
+
+    has_default = parameter.default is not inspect.Parameter.empty
+    resolve_by_type = False
+
+    annotation = parameter.annotation
+    if isinstance(annotation, TypeResolver):
+        annotation = annotation.annotation
+        resolve_by_type = True
+
+    elif typing.get_origin(annotation) is typing.Annotated:
+        args = typing.get_args(annotation)
+
+        if args[1] is TypeResolver:
+            resolve_by_type = True
+
+    return Parameter(
+        parameter.name,
+        annotation,
+        from_=None,
+        default=parameter.default if has_default else None,
+        has_default=has_default,
+        resolve_by_type=resolve_by_type,
+        positional_only=positional_only,
+        keyword_only=keyword_only,
+    )
+
+
 def scan(call: typing.Callable[..., R], caching: bool = True) -> CallableInfo[R]:
     """
     Get callable information
@@ -14,53 +53,21 @@ def scan(call: typing.Callable[..., R], caching: bool = True) -> CallableInfo[R]
 
     :return: callable information
     """
-    params: list[Parameter] = []
+    parameters: list[Parameter] = []
     signature = inspect.signature(call)
 
-    for param in signature.parameters.values():
-        positional_only = param.kind == inspect.Parameter.POSITIONAL_ONLY
-        keyword_only = param.kind == inspect.Parameter.KEYWORD_ONLY
-        if isinstance(param.default, CallableInfo):
-            params.append(
-                Parameter(
-                    param.name,
-                    param.annotation,
-                    from_=typing.cast(CallableInfo[typing.Any], param.default),
-                    positional_only=positional_only,
-                    keyword_only=keyword_only,
-                )
-            )
-            continue
+    for parameter in signature.parameters.values():
+        parameters.append(_transform_parameter(parameter))
 
-        has_default = param.default is not inspect.Parameter.empty
-        resolve_by_type = False
+    generator = inspect.isgeneratorfunction(call)
+    async_generator = inspect.isasyncgenfunction(call)
 
-        annotation = param.annotation
-        if isinstance(annotation, TypeResolver):
-            annotation = annotation.annotation
-            resolve_by_type = True
+    context = hasattr(call, "__enter__") and hasattr(call, "__exit__")
+    async_context = hasattr(call, "__aenter__") and hasattr(call, "__aexit__")
 
-        elif typing.get_origin(annotation) is typing.Annotated:
-            args = typing.get_args(annotation)
-
-            if args[1] is TypeResolver:
-                resolve_by_type = True
-
-        params.append(
-            Parameter(
-                param.name,
-                annotation,
-                from_=None,
-                default=param.default if has_default else None,
-                has_default=has_default,
-                resolve_by_type=resolve_by_type,
-                positional_only=positional_only,
-                keyword_only=keyword_only,
-            )
-        )
-
-    async_: bool = inspect.iscoroutinefunction(call) or inspect.isasyncgenfunction(call)
-    generator: bool = inspect.isgeneratorfunction(call) or inspect.isasyncgenfunction(call)
+    async_: bool = inspect.iscoroutinefunction(call) or async_generator or async_context
+    generator: bool = generator or async_generator
+    context: bool = context or async_context
 
     info = typing.cast(
         CallableInfo[R],
@@ -68,8 +75,9 @@ def scan(call: typing.Callable[..., R], caching: bool = True) -> CallableInfo[R]
             call=call,
             use_cache=caching,
             async_=async_,
+            context=context,
             generator=generator,
-            parameters=params,
+            parameters=parameters,
             return_annotation=signature.return_annotation,
             configuration=get_configuration(call) if is_configured(call) else None,
         ),
