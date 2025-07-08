@@ -53,11 +53,11 @@ def scan(call: typing.Callable[..., R], caching: bool = True) -> CallableInfo[R]
 
     :return: callable information
     """
-    parameters: list[Parameter] = []
-    signature = inspect.signature(call)
 
-    for parameter in signature.parameters.values():
-        parameters.append(_transform_parameter(parameter))
+    if hasattr(call, "__fundi_info__"):
+        return typing.cast(CallableInfo[typing.Any], getattr(call, "__fundi_info__"))
+
+    signature = inspect.signature(call)
 
     generator = inspect.isgeneratorfunction(call)
     async_generator = inspect.isasyncgenfunction(call)
@@ -65,9 +65,11 @@ def scan(call: typing.Callable[..., R], caching: bool = True) -> CallableInfo[R]
     context = hasattr(call, "__enter__") and hasattr(call, "__exit__")
     async_context = hasattr(call, "__aenter__") and hasattr(call, "__aexit__")
 
-    async_: bool = inspect.iscoroutinefunction(call) or async_generator or async_context
-    generator: bool = generator or async_generator
-    context: bool = context or async_context
+    async_ = inspect.iscoroutinefunction(call) or async_generator or async_context
+    generator = generator or async_generator
+    context = context or async_context
+
+    parameters = [_transform_parameter(parameter) for parameter in signature.parameters.values()]
 
     info = typing.cast(
         CallableInfo[R],
@@ -82,5 +84,10 @@ def scan(call: typing.Callable[..., R], caching: bool = True) -> CallableInfo[R]
             configuration=get_configuration(call) if is_configured(call) else None,
         ),
     )
+
+    try:
+        setattr(call, "__fundi_info__", info)
+    except (AttributeError, TypeError):
+        pass
 
     return info

@@ -1,7 +1,6 @@
-import contextlib
 import typing
+import contextlib
 import collections.abc
-from contextlib import ExitStack, AsyncExitStack
 
 from fundi.resolve import resolve
 from fundi.types import CallableInfo
@@ -61,7 +60,7 @@ def injection_impl(
 def inject(
     scope: collections.abc.Mapping[str, typing.Any],
     info: CallableInfo[typing.Any],
-    stack: ExitStack,
+    stack: contextlib.ExitStack,
     cache: (
         collections.abc.MutableMapping[typing.Callable[..., typing.Any], typing.Any] | None
     ) = None,
@@ -106,7 +105,7 @@ def inject(
 async def ainject(
     scope: collections.abc.Mapping[str, typing.Any],
     info: CallableInfo[typing.Any],
-    stack: AsyncExitStack,
+    stack: contextlib.AsyncExitStack,
     cache: (
         collections.abc.MutableMapping[typing.Callable[..., typing.Any], typing.Any] | None
     ) = None,

@@ -5,7 +5,6 @@ import warnings
 import contextlib
 import collections.abc
 from types import TracebackType
-from contextlib import AsyncExitStack, ExitStack
 
 from fundi.types import CallableInfo, InjectionTrace, DependencyConfiguration
 
@@ -50,7 +49,7 @@ def add_injection_trace(
 
 
 def call_sync(
-    stack: ExitStack | AsyncExitStack,
+    stack: contextlib.ExitStack | contextlib.AsyncExitStack,
     info: CallableInfo[typing.Any],
     values: collections.abc.Mapping[str, typing.Any],
 ) -> typing.Any:
@@ -123,7 +122,7 @@ def call_sync(
 
 
 async def call_async(
-    stack: AsyncExitStack,
+    stack: contextlib.AsyncExitStack,
     info: CallableInfo[typing.Any],
     values: collections.abc.Mapping[str, typing.Any],
 ) -> typing.Any:
