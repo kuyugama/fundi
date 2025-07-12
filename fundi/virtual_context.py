@@ -1,7 +1,7 @@
 """
 Virtual context managers are created to replace contextlib.contextmanager
 and contextlib.asynccontextmanager decorators.
-They are fully typed and distiungishable by FunDIs `scan(...)` function
+They are fully typed and distinguishable by FunDIs `scan(...)` function
 """
 
 import types
