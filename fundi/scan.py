@@ -1,3 +1,4 @@
+from dataclasses import replace
 import typing
 import inspect
 
@@ -55,7 +56,8 @@ def scan(call: typing.Callable[..., R], caching: bool = True) -> CallableInfo[R]
     """
 
     if hasattr(call, "__fundi_info__"):
-        return typing.cast(CallableInfo[typing.Any], getattr(call, "__fundi_info__"))
+        info = typing.cast(CallableInfo[typing.Any], getattr(call, "__fundi_info__"))
+        return replace(info, use_cache=caching)
 
     signature = inspect.signature(call)
 
