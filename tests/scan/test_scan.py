@@ -1,8 +1,8 @@
-import functools
 import inspect
+import functools
 from types import TracebackType
-from fundi import scan, from_, FromType
 from fundi.configurable import configurable_dependency
+from fundi import scan, from_, FromType, virtual_context
 from fundi.types import DependencyConfiguration, Parameter
 
 
@@ -216,6 +216,34 @@ def test_scan_async_context():
             exc_tb: TracebackType | None,
         ):
             return False
+
+    info = scan(dep)
+
+    assert info.async_ is True
+    assert info.generator is False
+    assert info.context is True
+    assert info.call is dep
+    assert info.parameters == [Parameter("name", str, None)]
+
+
+def test_scan_virtual_context():
+    @virtual_context
+    def dep(name: str):
+        yield name
+
+    info = scan(dep)
+
+    assert info.async_ is False
+    assert info.generator is False
+    assert info.context is True
+    assert info.call is dep
+    assert info.parameters == [Parameter("name", str, None)]
+
+
+def test_scan_async_virtual_context():
+    @virtual_context
+    async def dep(name: str):
+        yield name
 
     info = scan(dep)
 
