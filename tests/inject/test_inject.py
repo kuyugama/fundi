@@ -1,3 +1,4 @@
+from types import TracebackType
 from contextlib import ExitStack, AsyncExitStack
 
 from fundi.types import InjectionTrace
@@ -228,3 +229,45 @@ def test_keyword_only():
         result = inject({"arg": "argValue"}, scan(dep), stack)
 
         assert result == "argValue"
+
+
+def test_context():
+    class dep:
+        def __init__(self, name: str):
+            self.name = name
+
+        def __enter__(self):
+            return self.name
+
+        def __exit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc_val: BaseException | None,
+            exc_tb: TracebackType | None,
+        ):
+            return False
+
+    with ExitStack() as stack:
+        result = inject({"name": "context"}, scan(dep), stack)
+        assert result == "context"
+
+
+async def test_async_context():
+    class dep:
+        def __init__(self, name: str):
+            self.name = name
+
+        async def __aenter__(self):
+            return self.name
+
+        async def __aexit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc_val: BaseException | None,
+            exc_tb: TracebackType | None,
+        ):
+            return False
+
+    async with AsyncExitStack() as stack:
+        result = await ainject({"name": "context"}, scan(dep), stack)
+        assert result == "context"

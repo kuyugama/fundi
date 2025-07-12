@@ -45,6 +45,7 @@ class CallableInfo(typing.Generic[R]):
     call: typing.Callable[..., R]
     use_cache: bool
     async_: bool
+    context: bool
     generator: bool
     parameters: list[Parameter]
     return_annotation: typing.Any

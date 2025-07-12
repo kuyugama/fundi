@@ -1,4 +1,6 @@
 import typing
+from types import FunctionType
+from collections.abc import AsyncGenerator, Generator
 
 from fundi.util import callable_str
 from fundi.types import CallableInfo
@@ -11,3 +13,14 @@ class ScopeValueNotFoundError(ValueError):
         )
         self.parameter: str = parameter
         self.info: CallableInfo[typing.Any] = info
+
+
+class GeneratorExitedTooEarly(Exception):
+    def __init__(
+        self,
+        function: FunctionType,
+        generator: AsyncGenerator[typing.Any] | Generator[typing.Any, None, None],
+    ):
+        super().__init__(f"Generator exited too early")
+        self.function: FunctionType = function
+        self.generator: AsyncGenerator[typing.Any] | Generator[typing.Any, None, None] = generator
