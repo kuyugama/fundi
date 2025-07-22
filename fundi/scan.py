@@ -7,7 +7,9 @@ from fundi.types import R, CallableInfo, Parameter, TypeResolver
 
 
 def _transform_parameter(parameter: inspect.Parameter) -> Parameter:
+    positional_varying = parameter.kind == inspect.Parameter.VAR_POSITIONAL
     positional_only = parameter.kind == inspect.Parameter.POSITIONAL_ONLY
+    keyword_varying = parameter.kind == inspect.Parameter.VAR_KEYWORD
     keyword_only = parameter.kind == inspect.Parameter.KEYWORD_ONLY
 
     if isinstance(parameter.default, CallableInfo):
@@ -15,7 +17,9 @@ def _transform_parameter(parameter: inspect.Parameter) -> Parameter:
             parameter.name,
             parameter.annotation,
             from_=typing.cast(CallableInfo[typing.Any], parameter.default),
+            positional_varying=positional_varying,
             positional_only=positional_only,
+            keyword_varying=keyword_varying,
             keyword_only=keyword_only,
         )
 
@@ -40,7 +44,9 @@ def _transform_parameter(parameter: inspect.Parameter) -> Parameter:
         default=parameter.default if has_default else None,
         has_default=has_default,
         resolve_by_type=resolve_by_type,
+        positional_varying=positional_varying,
         positional_only=positional_only,
+        keyword_varying=keyword_varying,
         keyword_only=keyword_only,
     )
 
