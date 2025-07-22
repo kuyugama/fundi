@@ -14,4 +14,6 @@ API Reference
 
 .. autofunction :: fundi.configurable_dependency
 
+.. autofunction :: fundi.virtual_context
+
 .. autodata:: fundi.FromType

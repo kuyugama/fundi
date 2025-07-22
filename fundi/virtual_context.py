@@ -132,6 +132,35 @@ def virtual_context(
 ) -> VirtualContextManager[T, P] | AsyncVirtualContextManager[T, P]:
     """
     Define virtual context manager using decorator
+
+    Example::
+
+
+        @virtual_context
+        def file(name: str):
+            file_ = open(name, "r")
+            try:
+                yield file_
+            finally:
+                file_.close()
+
+
+        with file("dontreadthis.txt") as f:
+            print(f.read()
+
+
+        @virtual_context
+        async def lock(name: str):
+            lock_ = locks[name]
+            lock_.acquire()
+            try:
+                yield
+            finally:
+                lock_.release()
+
+
+        async with lock("socket-send"):
+            await socket.send("wtf")
     """
     if inspect.isasyncgenfunction(function):
         return AsyncVirtualContextManager(function)
