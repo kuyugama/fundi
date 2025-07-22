@@ -9,6 +9,22 @@ resources after data they returned was used
 
 .. literalinclude:: ../examples/lifespan.py
 
+Also, as lifespan dependencies can be used classes that implement
+context manager protocol - sync (``__enter__`` and ``__exit__``) or 
+async (``__aenter__`` and ``__aexit__``)
+
+.. literalinclude:: ../examples/context_manager.py
+
+Alternatively, you can use "virtual" context managers.
+
+  "Virtual" context managers are drop-in replacements for decorators 
+  from the ``contextlib`` module, such as ``@contextmanager`` or ``@asynccontextmanager``.
+
+.. literalinclude:: ../examples/virtual_context_manager.py
+..
+
+  The ``@virtual_context`` decorator automatically chooses the correct context manager - 
+  asynchronous or synchronous depending on the decorated function type. 
 
 Lifespan exception awareness
 ============================

@@ -2,16 +2,32 @@
 Lifespan dependency
 *******************
 
-Lifespan dependencies are python generator-functions with exactly one
-:code:`yield`. Lifespan dependencies are used when a resource needs
-both setup and teardown — for example, opening a file, acquiring a lock, or starting a database session.
+Lifespan dependencies can be either:
+  - A python generator-functions with exactly one ``yield``
 
-How they work
-    Before :code:`yield`: setup logic - create resource, acquire locks, etc.
+    How they work
+      Before :code:`yield`: setup logic - create resource, acquire locks, etc.
 
-    At :code:`yield` - provide value to dependant.
+      At :code:`yield` - provide value to dependant.
 
-    After :code:`yield`: teardown logic - clean up, release, close, etc.
+      After :code:`yield`: teardown logic - clean up, release, close, etc.
+
+  - A class that implements context manager protocol, 
+    either asynchronous(``__aenter__``, ``__aexit__``) or 
+    synchronous(``__enter__``, ``__exit__``)
+
+    How they work
+      ``__init__`` method may be used to define dependencies and store their values
+
+      ``__enter__`` or ``__aenter__``: setup logic - create resource, acquire locks, etc.
+
+      ``__exit__`` or ``__aexit__``:  teardown logic - clean up, release, close, etc.
+
+Lifespan dependencies should be used whenever tear-down logic should take the place. 
+For example, closing a file, database session or releasing a lock.
+
+Generator-function lifespan dependency
+======================================
 
 Example of dependency that acquires lock, opens file, yields it to dependant and closes file after it was used:
 
@@ -53,6 +69,45 @@ Asynchronous dependency that does the same:
             yield file
             file.close()
 
+
+Context-manager lifespan dependency
+===================================
+
+You can define lifespan dependencies using class-based 
+context managers - either **synchronous** (``__enter__`` / ``__exit__``) 
+or **asynchronous** (``__aenter__`` / ``__aexit__``):
+
+.. literalinclude:: ../../examples/context_manager.py
+
+
+
+If you want to use a function as a context manager - 
+instead of writing a class - you can use a "virtual" context manager:
+
+.. literalinclude:: ../../examples/virtual_context_manager.py
+..
+
+"Virtual" context managers are drop-in replacements for the ``contextlib``
+decorators like ``@contextmanager`` and ``@asynccontextmanager``.
+
+The **key difference** is that they **preserve function metadata**, 
+making them distinguishable from regular functions during introspection.
+This is essential because ``contextlib``’s context manager 
+decorators **wrap your generator function** in a way that 
+**makes it impossible** for FunDI to detect them as context 
+managers during introspection.
+
+To solve this, FunDI provides a built-in ``@virtual_context`` decorator.
+
+  It automatically detects whether the function is sync or async and applies 
+  the appropriate context manager under the hood.
+
+..
+
+  **Developer note**
+
+  `I originally tried to support` ``contextlib``'s `context managers directly —
+  but the resulting code was way too hacky for my taste 😼`
 
 Exception awareness
 ===================

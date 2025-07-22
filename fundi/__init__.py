@@ -8,6 +8,7 @@ from .debug import tree, order
 from .inject import inject, ainject
 from .configurable import configurable_dependency, MutableConfigurationWarning
 from .util import injection_trace, is_configured, get_configuration, normalize_annotation
+from .virtual_context import virtual_context, VirtualContextManager, AsyncVirtualContextManager
 from .types import CallableInfo, TypeResolver, InjectionTrace, R, Parameter, DependencyConfiguration
 
 
@@ -28,10 +29,13 @@ __all__ = [
     "TypeResolver",
     "is_configured",
     "InjectionTrace",
+    "virtual_context",
     "injection_trace",
     "get_configuration",
     "normalize_annotation",
+    "VirtualContextManager",
     "DependencyConfiguration",
     "configurable_dependency",
+    "AsyncVirtualContextManager",
     "MutableConfigurationWarning",
 ]
