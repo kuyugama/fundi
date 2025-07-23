@@ -38,6 +38,8 @@ class Parameter:
     resolve_by_type: bool = False
     positional_only: bool = False
     keyword_only: bool = False
+    positional_varying: bool = False
+    keyword_varying: bool = False
 
 
 @dataclass
@@ -55,8 +57,13 @@ class CallableInfo(typing.Generic[R]):
     def __post_init__(self):
         self.named_parameters = {p.name: p for p in self.parameters}
 
-    def build_values(self, *args: typing.Any, **kwargs: typing.Any) -> dict[str, typing.Any]:
-        arguments: dict[str, typing.Any] = {}
+    def _build_values(
+        self,
+        args: tuple[typing.Any, ...],
+        kwargs: collections.abc.MutableMapping[str, typing.Any],
+        partial: bool = False,
+    ) -> dict[str, typing.Any]:
+        values: dict[str, typing.Any] = {}
 
         args_amount = len(args)
 
@@ -64,22 +71,42 @@ class CallableInfo(typing.Generic[R]):
         for parameter in self.parameters:
             name = parameter.name
 
+            if parameter.keyword_varying:
+                values[name] = kwargs
+                continue
+
             if name in kwargs:
-                arguments[name] = kwargs[name]
+                values[name] = kwargs.pop(name)
+                continue
+
+            if parameter.positional_varying:
+                values[name] = args[ix:]
+                ix = args_amount
                 continue
 
             if ix < args_amount:
-                arguments[name] = args[ix]
+                values[name] = args[ix]
                 ix += 1
                 continue
 
             if parameter.has_default:
-                arguments[name] = parameter.default
+                values[name] = parameter.default
                 continue
 
-            raise ValueError(f'Argument for parameter "{parameter.name}" not found')
+            if not partial:
+                raise ValueError(f'Argument for parameter "{parameter.name}" not found')
 
-        return arguments
+        return values
+
+    def build_values(
+        self, *args: typing.Any, **kwargs: typing.Any
+    ) -> collections.abc.Mapping[str, typing.Any]:
+        return self._build_values(args, kwargs)
+
+    def partial_build_values(
+        self, *args: typing.Any, **kwargs: typing.Any
+    ) -> collections.abc.Mapping[str, typing.Any]:
+        return self._build_values(args, kwargs, partial=True)
 
     def build_arguments(
         self, values: collections.abc.Mapping[str, typing.Any]
@@ -95,8 +122,12 @@ class CallableInfo(typing.Generic[R]):
 
             if parameter.positional_only:
                 positional += (value,)
+            elif parameter.positional_varying:
+                positional += value
             elif parameter.keyword_only:
                 keyword[name] = value
+            elif parameter.keyword_varying:
+                keyword.update(value)
             else:
                 positional += (value,)
 
