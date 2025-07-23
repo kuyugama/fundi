@@ -114,11 +114,13 @@ class CallableInfo(typing.Generic[R]):
         positional: tuple[typing.Any, ...] = ()
         keyword: dict[str, typing.Any] = {}
 
-        for name, value in values.items():
-            if name not in self.named_parameters:
-                raise ValueError(f'Parameter named "{name}" not found')
+        for parameter in self.parameters:
+            name = parameter.name
 
-            parameter = self.named_parameters[name]
+            if name not in values:
+                raise ValueError(f'Value for "{name}" parameter not found')
+
+            value = values[name]
 
             if parameter.positional_only:
                 positional += (value,)
