@@ -252,3 +252,19 @@ def test_scan_async_virtual_context():
     assert info.context is True
     assert info.call is dep
     assert info.parameters == [Parameter("name", str, None)]
+
+
+def test_scan_vararg():
+    def dep(*args: int): ...
+
+    info = scan(dep)
+
+    assert info.parameters == [Parameter("args", int, None, positional_varying=True)]
+
+
+def test_scan_varkw():
+    def dep(**kwargs: int): ...
+
+    info = scan(dep)
+
+    assert info.parameters == [Parameter("kwargs", int, None, keyword_varying=True)]
