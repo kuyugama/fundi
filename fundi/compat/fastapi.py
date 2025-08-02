@@ -35,7 +35,6 @@ from fastapi.dependencies.utils import (
     solve_dependencies,
     add_param_to_fields,
     _should_embed_body_fields,  # pyright: ignore[reportPrivateUsage]
-    add_non_field_param_to_dependency,
 )
 
 
@@ -215,15 +214,7 @@ def get_scope_dependant(
             value=param.default,
             is_path_param=param.name in path_param_names,
         )
-        if add_non_field_param_to_dependency(
-            param_name=param.name,
-            type_annotation=details.type_annotation,
-            dependant=dependant,
-        ):
-            assert (
-                details.field is None
-            ), f"Cannot specify multiple FastAPI annotations for {param.name!r}"
-            continue
+
         assert details.field is not None
         if isinstance(details.field.field_info, params.Body):
             dependant.body_params.append(details.field)
