@@ -38,6 +38,16 @@ from fastapi.dependencies.utils import (
 )
 
 
+ALIAS_ALLOWED_CLASSES = (
+    Request,
+    WebSocket,
+    HTTPConnection,
+    Response,
+    BackgroundTasks,
+    SecurityScopes,
+)
+
+
 async def validate_body(request: Request, stack: AsyncExitStack, body_field: ModelField | None):
     is_body_form = body_field and isinstance(body_field.field_info, params.Form)
     try:
@@ -215,6 +225,9 @@ def get_scope_dependant(
             is_path_param=param.name in path_param_names,
         )
 
+        if details.type_annotation in ALIAS_ALLOWED_CLASSES:
+            continue
+
         assert details.field is not None
         if isinstance(details.field.field_info, params.Body):
             dependant.body_params.append(details.field)
@@ -226,14 +239,6 @@ def get_scope_dependant(
 
 def get_request_related_aliases(ci: CallableInfo[typing.Any]) -> dict[type, set[str]]:
     aliases: defaultdict[type, set[str]] = defaultdict(set)
-    allowed_classes = (
-        Request,
-        WebSocket,
-        HTTPConnection,
-        Response,
-        BackgroundTasks,
-        SecurityScopes,
-    )
     for parameter in ci.parameters:
         if parameter.from_ is not None:
             subaliases = get_request_related_aliases(parameter.from_)
@@ -243,7 +248,7 @@ def get_request_related_aliases(ci: CallableInfo[typing.Any]) -> dict[type, set[
 
         origin = typing.get_origin(parameter.annotation) or parameter.annotation
 
-        for type_ in allowed_classes:
+        for type_ in ALIAS_ALLOWED_CLASSES:
             if lenient_issubclass(origin, type_):
                 aliases[type_].add(parameter.name)
     return aliases
