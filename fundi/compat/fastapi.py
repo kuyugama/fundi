@@ -95,6 +95,7 @@ async def validate_body(request: Request, stack: AsyncExitStack, body_field: Mod
 def get_request_handler(
     ci: CallableInfo[typing.Any],
     scope_dependant: Dependant,
+    extra_dependencies: list[CallableInfo[typing.Any]],
     scope_aliases: dict[type, set[str]],
     body_field: ModelField | None = None,
     status_code: int | None = None,
@@ -151,7 +152,10 @@ def get_request_handler(
 
                 values.update({name: value for name in names})
 
-            raw_response = await ainject(scope.values, ci, stack)
+            for dependency in extra_dependencies:
+                await ainject(values, dependency, stack)
+
+            raw_response = await ainject(values, ci, stack)
 
             if isinstance(raw_response, Response):
                 if raw_response.background is None:
@@ -265,7 +269,7 @@ class FunDIRoute(APIRoute):
         response_model: typing.Any = Default(None),
         status_code: int | None = None,
         tags: list[str | Enum] | None = None,
-        dependencies: Sequence[params.Depends] | None = None,
+        dependencies: Sequence[typing.Callable[..., typing.Any]] | None = None,
         summary: str | None = None,
         description: str | None = None,
         response_description: str = "Successful Response",
@@ -355,7 +359,6 @@ class FunDIRoute(APIRoute):
             self.response_field = None  # type: ignore
             self.secure_cloned_response_field = None
 
-        self.dependencies = list(dependencies or [])
         self.description = description or inspect.cleandoc(self.endpoint.__doc__ or "")
 
         # if a "form feed" character (page break) is found in the description text,
@@ -392,6 +395,7 @@ class FunDIRoute(APIRoute):
             get_request_handler(
                 callable_info,
                 self.dependant,
+                extra_dependencies=[scan(call) for call in (dependencies or [])[::-1]],
                 scope_aliases=get_request_related_aliases(callable_info),
                 body_field=self.body_field,
                 status_code=self.status_code,
