@@ -4,7 +4,6 @@ from collections.abc import Coroutine
 from contextlib import AsyncExitStack
 
 from fastapi import params
-from fastapi.security.oauth2 import SecurityScopes
 from fastapi.types import IncEx
 from starlette.requests import Request
 from pydantic.v1.fields import Undefined
@@ -12,6 +11,7 @@ from fastapi.routing import serialize_response
 from starlette.exceptions import HTTPException
 from starlette.background import BackgroundTasks
 from fastapi.dependencies.models import Dependant
+from fastapi.security.oauth2 import SecurityScopes
 from fastapi.exceptions import RequestValidationError
 from starlette.responses import JSONResponse, Response
 from fastapi.dependencies.utils import solve_dependencies

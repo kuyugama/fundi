@@ -3,8 +3,8 @@ import inspect
 from enum import Enum, IntEnum
 from collections.abc import Sequence
 
-from fastapi import Response
 from fastapi.types import IncEx
+from fastapi import Response, params
 from fastapi.routing import APIRoute
 from fastapi._compat import ModelField
 from fastapi.responses import JSONResponse
@@ -24,6 +24,7 @@ from fastapi.dependencies.utils import (
 )
 
 from fundi import scan
+from fundi.types import CallableInfo
 from .handler import get_request_handler
 from .dependant import get_scope_dependant
 from .alias import get_request_related_aliases
@@ -40,7 +41,10 @@ class FunDIRoute(APIRoute):
         response_model: typing.Any = Default(None),
         status_code: int | None = None,
         tags: list[str | Enum] | None = None,
-        dependencies: Sequence[typing.Callable[..., typing.Any]] | None = None,
+        dependencies: (
+            Sequence[typing.Callable[..., typing.Any] | params.Depends | CallableInfo[typing.Any]]
+            | None
+        ) = None,
         summary: str | None = None,
         description: str | None = None,
         response_description: str = "Successful Response",
@@ -68,7 +72,21 @@ class FunDIRoute(APIRoute):
         self.ci = callable_info
         self.path = path
         self.endpoint = endpoint
-        self.dependencies = dependencies
+        self.dependencies: list[CallableInfo[typing.Any]] = []
+
+        for dependency in dependencies or []:
+            if isinstance(dependency, params.Depends):
+                if dependency.dependency is None:
+                    continue
+
+                self.dependencies.append(scan(dependency.dependency))
+                continue
+
+            if isinstance(dependency, CallableInfo):
+                self.dependencies.append(dependency)
+                continue
+
+            self.dependencies.append(scan(dependency))
 
         if isinstance(response_model, DefaultPlaceholder):
             if not lenient_issubclass(callable_info.return_annotation, Response):
@@ -167,7 +185,7 @@ class FunDIRoute(APIRoute):
             get_request_handler(
                 callable_info,
                 self.dependant,
-                extra_dependencies=[scan(call) for call in (dependencies or [])[::-1]],
+                extra_dependencies=self.dependencies[::-1],
                 scope_aliases=get_request_related_aliases(callable_info),
                 body_field=self.body_field,
                 status_code=self.status_code,
