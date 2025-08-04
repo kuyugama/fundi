@@ -1,7 +1,13 @@
 import typing
 from collections import defaultdict
 
+
+from starlette.responses import Response
+from starlette.websockets import WebSocket
+from starlette.background import BackgroundTasks
 from pydantic.v1.utils import lenient_issubclass
+from fastapi.security.oauth2 import SecurityScopes
+from starlette.requests import HTTPConnection, Request
 
 from fundi.types import CallableInfo
 from .constants import ALIAS_ALLOWED_CLASSES
@@ -22,3 +28,33 @@ def get_request_related_aliases(ci: CallableInfo[typing.Any]) -> dict[type, set[
             if lenient_issubclass(origin, type_):
                 aliases[type_].add(parameter.name)
     return aliases
+
+
+def resolve_aliases(
+    scope_aliases: dict[type, set[str]],
+    request: Request,
+    background_tasks: BackgroundTasks,
+    response: Response,
+    security_scopes: SecurityScopes,
+) -> dict[str, typing.Any]:
+    values: dict[str, typing.Any] = {}
+
+    for type_, names in scope_aliases.items():
+
+        if type_ is HTTPConnection:
+            value = request
+        elif type_ is Request:
+            value = request
+        elif type_ is WebSocket:
+            assert isinstance(request, WebSocket), "Not a websocket"
+            value = request
+        elif type_ is BackgroundTasks:
+            value = background_tasks
+        elif type_ is Response:
+            value = response
+        else:
+            value = security_scopes
+
+        values.update({name: value for name in names})
+
+    return values

@@ -4,15 +4,15 @@ from collections.abc import Coroutine
 from contextlib import AsyncExitStack
 
 from fastapi import params
+from fastapi.security.oauth2 import SecurityScopes
 from fastapi.types import IncEx
+from starlette.requests import Request
 from pydantic.v1.fields import Undefined
-from starlette.websockets import WebSocket
 from fastapi.routing import serialize_response
 from starlette.exceptions import HTTPException
 from starlette.background import BackgroundTasks
 from fastapi.dependencies.models import Dependant
 from fastapi.exceptions import RequestValidationError
-from starlette.requests import HTTPConnection, Request
 from starlette.responses import JSONResponse, Response
 from fastapi.dependencies.utils import solve_dependencies
 from fastapi.utils import is_body_allowed_for_status_code
@@ -21,6 +21,8 @@ from fastapi.datastructures import Default, DefaultPlaceholder
 
 from fundi.inject import ainject
 from fundi.types import CallableInfo
+
+from .alias import resolve_aliases
 
 
 async def validate_body(request: Request, stack: AsyncExitStack, body_field: ModelField | None):
@@ -103,47 +105,41 @@ def get_request_handler(
     async def app(request: Request) -> Response:
         background_tasks = BackgroundTasks()
         stack = AsyncExitStack()
+        # Close exit stack at after the response is sent
         background_tasks.add_task(stack.aclose)
 
-        body = await validate_body(request, stack, body_field)
+        body_stack = AsyncExitStack()
+        async with body_stack:
+            body = await validate_body(request, body_stack, body_field)
 
-        scope = await solve_dependencies(
-            request=request,
-            dependant=scope_dependant,
-            body=body,
-            dependency_overrides_provider=dependency_overrides_provider,
-            async_exit_stack=stack,
-            embed_body_fields=embed_body_fields,
-            background_tasks=background_tasks,
-        )
+            scope = await solve_dependencies(
+                request=request,
+                dependant=scope_dependant,
+                body=body,
+                dependency_overrides_provider=dependency_overrides_provider,
+                async_exit_stack=stack,
+                embed_body_fields=embed_body_fields,
+                background_tasks=background_tasks,
+            )
 
-        if scope.errors:
-            raise RequestValidationError(_normalize_errors(scope.errors), body=body)
+            if scope.errors:
+                raise RequestValidationError(_normalize_errors(scope.errors), body=body)
 
-        values = {**scope.values}
+            values = {
+                **scope.values,
+                **resolve_aliases(
+                    scope_aliases,
+                    request,
+                    background_tasks,
+                    scope.response,
+                    SecurityScopes(scope_dependant.security_scopes),
+                ),
+            }
 
-        for type_, names in scope_aliases.items():
+            for dependency in extra_dependencies:
+                await ainject(values, dependency, stack)
 
-            if type_ is HTTPConnection:
-                value = request
-            elif type_ is Request:
-                value = request
-            elif type_ is WebSocket:
-                assert isinstance(request, WebSocket), "Not a websocket"
-                value = request
-            elif type_ is BackgroundTasks:
-                value = background_tasks
-            elif type_ is Response:
-                value = scope.response
-            else:
-                value = scope_dependant.security_scopes
-
-            values.update({name: value for name in names})
-
-        for dependency in extra_dependencies:
-            await ainject(values, dependency, stack)
-
-        raw_response = await ainject(values, ci, stack)
+            raw_response = await ainject(values, ci, stack)
 
         if isinstance(raw_response, Response):
             if raw_response.background is None:
