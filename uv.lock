@@ -226,6 +226,7 @@ source = { virtual = "." }
 [package.dev-dependencies]
 dev = [
     { name = "black" },
+    { name = "fastapi" },
     { name = "furo" },
     { name = "myst-parser" },
     { name = "pynvim" },
@@ -251,6 +252,7 @@ fastapi = [
 [package.metadata.requires-dev]
 dev = [
     { name = "black", specifier = ">=25.1.0" },
+    { name = "fastapi", specifier = ">=0.116.1" },
     { name = "furo", specifier = ">=2024.8.6" },
     { name = "myst-parser", specifier = ">=4.0.1" },
     { name = "pynvim", specifier = ">=0.5.2" },
