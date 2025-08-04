@@ -101,77 +101,81 @@ def get_request_handler(
         actual_response_class = response_class
 
     async def app(request: Request) -> Response:
-        async with AsyncExitStack() as stack:
-            body = await validate_body(request, stack, body_field)
+        background_tasks = BackgroundTasks()
+        stack = AsyncExitStack()
+        background_tasks.add_task(stack.aclose)
 
-            scope = await solve_dependencies(
-                request=request,
-                dependant=scope_dependant,
-                body=body,
-                dependency_overrides_provider=dependency_overrides_provider,
-                async_exit_stack=stack,
-                embed_body_fields=embed_body_fields,
-            )
+        body = await validate_body(request, stack, body_field)
 
-            if scope.errors:
-                raise RequestValidationError(_normalize_errors(scope.errors), body=body)
+        scope = await solve_dependencies(
+            request=request,
+            dependant=scope_dependant,
+            body=body,
+            dependency_overrides_provider=dependency_overrides_provider,
+            async_exit_stack=stack,
+            embed_body_fields=embed_body_fields,
+            background_tasks=background_tasks,
+        )
 
-            values = {**scope.values}
+        if scope.errors:
+            raise RequestValidationError(_normalize_errors(scope.errors), body=body)
 
-            for type_, names in scope_aliases.items():
+        values = {**scope.values}
 
-                if type_ is HTTPConnection:
-                    value = request
-                elif type_ is Request:
-                    value = request
-                elif type_ is WebSocket:
-                    assert isinstance(request, WebSocket), "Not a websocket"
-                    value = request
-                elif type_ is BackgroundTasks:
-                    value = scope.background_tasks or BackgroundTasks()
-                elif type_ is Response:
-                    value = scope.response
-                else:
-                    value = scope_dependant.security_scopes
+        for type_, names in scope_aliases.items():
 
-                values.update({name: value for name in names})
-
-            for dependency in extra_dependencies:
-                await ainject(values, dependency, stack)
-
-            raw_response = await ainject(values, ci, stack)
-
-            if isinstance(raw_response, Response):
-                if raw_response.background is None:
-                    raw_response.background = scope.background_tasks
-
-                response = raw_response
+            if type_ is HTTPConnection:
+                value = request
+            elif type_ is Request:
+                value = request
+            elif type_ is WebSocket:
+                assert isinstance(request, WebSocket), "Not a websocket"
+                value = request
+            elif type_ is BackgroundTasks:
+                value = background_tasks
+            elif type_ is Response:
+                value = scope.response
             else:
-                response_args: dict[str, typing.Any] = {"background": scope.background_tasks}
+                value = scope_dependant.security_scopes
 
-                # If status_code was set, use it, otherwise use the default from the
-                # response class, in the case of redirect it's 307
+            values.update({name: value for name in names})
 
-                status = scope.response.status_code or status_code
-                if status is not None:
-                    response_args["status_code"] = status
+        for dependency in extra_dependencies:
+            await ainject(values, dependency, stack)
 
-                content = await serialize_response(
-                    field=response_field,
-                    response_content=raw_response,
-                    include=response_model_include,
-                    exclude=response_model_exclude,
-                    by_alias=response_model_by_alias,
-                    exclude_unset=response_model_exclude_unset,
-                    exclude_defaults=response_model_exclude_defaults,
-                    exclude_none=response_model_exclude_none,
-                    is_coroutine=ci.async_,
-                )
-                response = actual_response_class(content, **response_args)
-                if not is_body_allowed_for_status_code(response.status_code):
-                    response.body = b""
+        raw_response = await ainject(values, ci, stack)
 
-                response.headers.raw.extend(scope.response.headers.raw)
+        if isinstance(raw_response, Response):
+            if raw_response.background is None:
+                raw_response.background = background_tasks
+
+            return raw_response
+
+        response_args: dict[str, typing.Any] = {"background": background_tasks}
+
+        # If status_code was set, use it, otherwise use the default from the
+        # response class, in the case of redirect it's 307
+
+        status = scope.response.status_code or status_code
+        if status is not None:
+            response_args["status_code"] = status
+
+        content = await serialize_response(
+            field=response_field,
+            response_content=raw_response,
+            include=response_model_include,
+            exclude=response_model_exclude,
+            by_alias=response_model_by_alias,
+            exclude_unset=response_model_exclude_unset,
+            exclude_defaults=response_model_exclude_defaults,
+            exclude_none=response_model_exclude_none,
+            is_coroutine=ci.async_,
+        )
+        response = actual_response_class(content, **response_args)
+        if not is_body_allowed_for_status_code(response.status_code):
+            response.body = b""
+
+        response.headers.raw.extend(scope.response.headers.raw)
 
         return response
 
