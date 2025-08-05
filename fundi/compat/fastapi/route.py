@@ -26,8 +26,9 @@ from fastapi.dependencies.utils import (
 from fundi import scan
 from fundi.types import CallableInfo
 from .handler import get_request_handler
-from .dependant import get_scope_dependant
+from .dependant import get_scope_dependant, update_dependant
 from .alias import get_request_related_aliases
+from fundi.compat.fastapi.metadata import build_metadata
 
 
 @typing.final
@@ -171,9 +172,17 @@ class FunDIRoute(APIRoute):
 
         self.response_fields = response_fields
 
-        self.dependant = get_scope_dependant(
-            callable_info, get_path_param_names(self.path_format), self.path_format
-        )
+        build_metadata(callable_info)
+
+        path_param_names = get_path_param_names(self.path_format)
+        self.dependant = get_scope_dependant(callable_info, path_param_names, self.path_format)
+
+        for ci in self.dependencies:
+            build_metadata(ci)
+            update_dependant(
+                get_scope_dependant(ci, path_param_names, self.path_format), self.dependant
+            )
+
         self._embed_body_fields = _should_embed_body_fields(self.dependant.body_params)
         self.body_field = get_body_field(
             flat_dependant=self.dependant,

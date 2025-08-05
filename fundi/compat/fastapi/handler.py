@@ -1,17 +1,12 @@
-import json
 import typing
 from collections.abc import Coroutine
 from contextlib import AsyncExitStack
 
-from fastapi import params
 from fastapi.types import IncEx
 from starlette.requests import Request
-from pydantic.v1.fields import Undefined
 from fastapi.routing import serialize_response
-from starlette.exceptions import HTTPException
 from starlette.background import BackgroundTasks
 from fastapi.dependencies.models import Dependant
-from fastapi.security.oauth2 import SecurityScopes
 from fastapi.exceptions import RequestValidationError
 from starlette.responses import JSONResponse, Response
 from fastapi.dependencies.utils import solve_dependencies
@@ -19,63 +14,11 @@ from fastapi.utils import is_body_allowed_for_status_code
 from fastapi._compat import ModelField, _normalize_errors  # pyright: ignore[reportPrivateUsage]
 from fastapi.datastructures import Default, DefaultPlaceholder
 
-from fundi.inject import ainject
+from .inject import inject
 from fundi.types import CallableInfo
 
 from .alias import resolve_aliases
-
-
-async def validate_body(request: Request, stack: AsyncExitStack, body_field: ModelField | None):
-    is_body_form = body_field and isinstance(body_field.field_info, params.Form)
-    try:
-        if body_field:
-            if is_body_form:
-                form = await request.form()
-                stack.push_async_callback(form.close)
-                return form
-
-            body_bytes = await request.body()
-            if body_bytes:
-                json_body: typing.Any = Undefined
-                content_type_value = request.headers.get("content-type")
-
-                if not content_type_value:
-                    json_body = await request.json()
-
-                else:
-                    if content_type_value.count("/") != 1:
-                        content_type_value = "text/plain"
-
-                    maintype, subtype = content_type_value.split("/", 1)
-
-                    if maintype == "application":
-                        if subtype == "json" or subtype.endswith("+json"):
-                            json_body = await request.json()
-
-                if json_body != Undefined:
-                    return json_body
-                else:
-                    return typing.cast(typing.Any, body_bytes)
-    except json.JSONDecodeError as e:
-        validation_error = RequestValidationError(
-            [
-                {
-                    "type": "json_invalid",
-                    "loc": ("body", e.pos),
-                    "msg": "JSON decode error",
-                    "input": {},
-                    "ctx": {"error": e.msg},
-                }
-            ],
-            body=e.doc,
-        )
-        raise validation_error from e
-    except HTTPException:
-        # If a middleware raises an HTTPException, it should be raised again
-        raise
-    except Exception as e:
-        http_error = HTTPException(status_code=400, detail="There was an error parsing the body")
-        raise http_error from e
+from .validate_request_body import validate_body
 
 
 def get_request_handler(
@@ -132,14 +75,13 @@ def get_request_handler(
                     request,
                     background_tasks,
                     scope.response,
-                    SecurityScopes(scope_dependant.security_scopes),
                 ),
             }
 
             for dependency in extra_dependencies:
-                await ainject(values, dependency, stack)
+                await inject(values, dependency, stack)
 
-            raw_response = await ainject(values, ci, stack)
+            raw_response = await inject(values, ci, stack)
 
         if isinstance(raw_response, Response):
             if raw_response.background is None:
@@ -151,7 +93,6 @@ def get_request_handler(
 
         # If status_code was set, use it, otherwise use the default from the
         # response class, in the case of redirect it's 307
-
         status = scope.response.status_code or status_code
         if status is not None:
             response_args["status_code"] = status

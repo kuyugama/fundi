@@ -6,7 +6,6 @@ from starlette.responses import Response
 from starlette.websockets import WebSocket
 from starlette.background import BackgroundTasks
 from pydantic.v1.utils import lenient_issubclass
-from fastapi.security.oauth2 import SecurityScopes
 from starlette.requests import HTTPConnection, Request
 
 from fundi.types import CallableInfo
@@ -35,12 +34,10 @@ def resolve_aliases(
     request: Request,
     background_tasks: BackgroundTasks,
     response: Response,
-    security_scopes: SecurityScopes,
 ) -> dict[str, typing.Any]:
     values: dict[str, typing.Any] = {}
 
     for type_, names in scope_aliases.items():
-
         if type_ is HTTPConnection:
             value = request
         elif type_ is Request:
@@ -53,7 +50,7 @@ def resolve_aliases(
         elif type_ is Response:
             value = response
         else:
-            value = security_scopes
+            raise RuntimeError(f"Unsupported alias type {type_!r}")
 
         values.update({name: value for name in names})
 
