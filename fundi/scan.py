@@ -1,4 +1,5 @@
 from dataclasses import replace
+from types import FunctionType
 import typing
 import inspect
 
@@ -65,32 +66,34 @@ def scan(call: typing.Callable[..., R], caching: bool = True) -> CallableInfo[R]
         info = typing.cast(CallableInfo[typing.Any], getattr(call, "__fundi_info__"))
         return replace(info, use_cache=caching)
 
-    signature = inspect.signature(call)
+    if isinstance(call, (FunctionType, type)):
+        truecall = call
+    else:
+        truecall = call.__call__
 
-    generator = inspect.isgeneratorfunction(call)
-    async_generator = inspect.isasyncgenfunction(call)
+    signature = inspect.signature(truecall)
 
-    context = hasattr(call, "__enter__") and hasattr(call, "__exit__")
-    async_context = hasattr(call, "__aenter__") and hasattr(call, "__aexit__")
+    generator = inspect.isgeneratorfunction(truecall)
+    async_generator = inspect.isasyncgenfunction(truecall)
 
-    async_ = inspect.iscoroutinefunction(call) or async_generator or async_context
+    context = hasattr(truecall, "__enter__") and hasattr(truecall, "__exit__")
+    async_context = hasattr(truecall, "__aenter__") and hasattr(truecall, "__aexit__")
+
+    async_ = inspect.iscoroutinefunction(truecall) or async_generator or async_context
     generator = generator or async_generator
     context = context or async_context
 
     parameters = [_transform_parameter(parameter) for parameter in signature.parameters.values()]
 
-    info = typing.cast(
-        CallableInfo[R],
-        CallableInfo(
-            call=call,
-            use_cache=caching,
-            async_=async_,
-            context=context,
-            generator=generator,
-            parameters=parameters,
-            return_annotation=signature.return_annotation,
-            configuration=get_configuration(call) if is_configured(call) else None,
-        ),
+    info = CallableInfo(
+        call=call,
+        use_cache=caching,
+        async_=async_,
+        context=context,
+        generator=generator,
+        parameters=parameters,
+        return_annotation=signature.return_annotation,
+        configuration=get_configuration(call) if is_configured(call) else None,
     )
 
     try:
