@@ -20,7 +20,6 @@ from .validate_request_body import validate_body
 def get_request_handler(
     ci: CallableInfo[typing.Any],
     extra_dependencies: list[CallableInfo[typing.Any]],
-    scope_aliases: dict[type, set[str]],
     body_field: ModelField | None = None,
     status_code: int | None = None,
     response_class: type[Response] | DefaultPlaceholder = Default(JSONResponse),
@@ -63,7 +62,6 @@ def get_request_handler(
                     dependency_overrides_provider,
                     embed_body_fields,
                     background_tasks,
-                    scope_aliases,
                     response,
                 )
 
@@ -75,7 +73,6 @@ def get_request_handler(
                 dependency_overrides_provider,
                 embed_body_fields,
                 background_tasks,
-                scope_aliases,
                 response,
             )
 

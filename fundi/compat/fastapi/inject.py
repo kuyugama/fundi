@@ -16,7 +16,7 @@ from fundi.util import call_async, call_sync
 
 from .alias import resolve_aliases
 from .metadata import get_metadata
-from .constants import METADATA_SCOPE_EXTRA
+from .constants import METADATA_ALIASES, METADATA_SCOPE_EXTRA
 from .types import DependencyOverridesProvider
 
 
@@ -28,7 +28,6 @@ async def inject(
     dependency_overrides_provider: DependencyOverridesProvider | None,
     embed_body_fields: bool,
     background_tasks: BackgroundTasks,
-    scope_aliases: dict[type, set[str]],
     response: Response,
     cache: (
         collections.abc.MutableMapping[typing.Callable[..., typing.Any], typing.Any] | None
@@ -67,7 +66,7 @@ async def inject(
     scope = {
         **fastapi_params.values,
         **resolve_aliases(
-            scope_aliases,
+            metadata[METADATA_ALIASES],
             request,
             background_tasks,
             response,
@@ -96,7 +95,6 @@ async def inject(
                     dependency_overrides_provider,
                     embed_body_fields,
                     background_tasks,
-                    scope_aliases,
                     response,
                     cache,
                     override,

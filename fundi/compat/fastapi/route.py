@@ -24,10 +24,10 @@ from fastapi.dependencies.utils import (
 )
 
 from fundi import scan
+from .alias import init_aliases
 from fundi.types import CallableInfo
 from .handler import get_request_handler
 from .dependant import get_scope_dependant, update_dependant
-from .alias import get_request_related_aliases
 from fundi.compat.fastapi.metadata import build_metadata
 
 
@@ -173,12 +173,14 @@ class FunDIRoute(APIRoute):
         self.response_fields = response_fields
 
         build_metadata(callable_info)
+        init_aliases(callable_info)
 
         path_param_names = get_path_param_names(self.path_format)
         self.dependant = get_scope_dependant(callable_info, path_param_names, self.path_format)
 
         for ci in self.dependencies:
             build_metadata(ci)
+            init_aliases(ci)
             update_dependant(
                 get_scope_dependant(ci, path_param_names, self.path_format), self.dependant
             )
@@ -194,7 +196,6 @@ class FunDIRoute(APIRoute):
             get_request_handler(
                 callable_info,
                 extra_dependencies=self.dependencies[::-1],
-                scope_aliases=get_request_related_aliases(callable_info),
                 body_field=self.body_field,
                 status_code=self.status_code,
                 response_class=self.response_class,

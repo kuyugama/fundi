@@ -10,7 +10,7 @@ from fastapi.dependencies.utils import add_param_to_fields, analyze_param
 from fundi.types import CallableInfo
 
 from .metadata import get_metadata
-from .constants import ALIAS_ALLOWED_CLASSES, METADATA_SECURITY_SCOPES
+from .constants import ALIAS_ALLOWED_CLASSES, METADATA_DEPENDANT, METADATA_SECURITY_SCOPES
 
 MF = typing.TypeVar("MF", bound=ModelField)
 
@@ -49,7 +49,7 @@ def get_scope_dependant(
         security_scopes = []
 
     dependant = Dependant(path=path)
-    get_metadata(ci).update(__dependant__=dependant)
+    get_metadata(ci).update({METADATA_DEPENDANT: dependant})
 
     flat_dependant = Dependant(path=path, security_scopes=security_scopes)
 

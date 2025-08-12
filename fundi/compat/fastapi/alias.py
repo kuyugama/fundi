@@ -8,25 +8,30 @@ from starlette.background import BackgroundTasks
 from pydantic.v1.utils import lenient_issubclass
 from starlette.requests import HTTPConnection, Request
 
+from .metadata import get_metadata
 from fundi.types import CallableInfo
-from .constants import ALIAS_ALLOWED_CLASSES
+from .constants import ALIAS_ALLOWED_CLASSES, METADATA_ALIASES
 
 
-def get_request_related_aliases(ci: CallableInfo[typing.Any]) -> dict[type, set[str]]:
+def init_aliases(ci: CallableInfo[typing.Any]) -> None:
+    metadata = get_metadata(ci)
+
     aliases: defaultdict[type, set[str]] = defaultdict(set)
+    metadata[METADATA_ALIASES] = aliases
+
     for parameter in ci.parameters:
         if parameter.from_ is not None:
-            subaliases = get_request_related_aliases(parameter.from_)
-            for type_, aliases_ in subaliases.items():
-                aliases[type_].update(aliases_)
+            init_aliases(parameter.from_)
             continue
 
         origin = typing.get_origin(parameter.annotation) or parameter.annotation
 
         for type_ in ALIAS_ALLOWED_CLASSES:
-            if lenient_issubclass(origin, type_):
-                aliases[type_].add(parameter.name)
-    return aliases
+            if not lenient_issubclass(origin, type_):
+                continue
+
+            aliases[type_].add(parameter.name)
+            break
 
 
 def resolve_aliases(

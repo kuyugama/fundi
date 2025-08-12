@@ -1,5 +1,5 @@
 import pytest
-from fundi import scan
+from fundi import from_, scan
 from functools import partial
 from starlette.requests import Request
 from starlette.responses import Response
@@ -54,3 +54,13 @@ def test_body_param():
     dependant = get_dependant(scan(homepage))
 
     assert dependant.body_params[0].name == "username"
+
+
+def test_multi_param_same_name():
+    def dependency(token: str = Header()): ...
+    def homepage(token: str = Query(), authtoken=from_(dependency)): ...
+
+    dependant = get_dependant(scan(homepage))
+
+    assert dependant.query_params[0].name == "token"
+    assert dependant.header_params[0].name == "token"
