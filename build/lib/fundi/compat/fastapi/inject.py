@@ -16,8 +16,8 @@ from fundi.util import call_async, call_sync
 
 from .alias import resolve_aliases
 from .metadata import get_metadata
+from .constants import METADATA_ALIASES, METADATA_SCOPE_EXTRA
 from .types import DependencyOverridesProvider
-from .constants import METADATA_ALIASES, METADATA_DEPENDANT, METADATA_SCOPE_EXTRA
 
 
 async def inject(
@@ -51,7 +51,7 @@ async def inject(
 
     fastapi_params = await solve_dependencies(
         request=request,
-        dependant=metadata[METADATA_DEPENDANT],
+        dependant=metadata["__dependant__"],
         body=body,
         dependency_overrides_provider=dependency_overrides_provider,
         async_exit_stack=stack,
