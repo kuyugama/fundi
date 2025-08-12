@@ -4,26 +4,21 @@ from contextlib import AsyncExitStack
 
 from fastapi.types import IncEx
 from starlette.requests import Request
+from fastapi._compat import ModelField
 from fastapi.routing import serialize_response
 from starlette.background import BackgroundTasks
-from fastapi.dependencies.models import Dependant
-from fastapi.exceptions import RequestValidationError
 from starlette.responses import JSONResponse, Response
-from fastapi.dependencies.utils import solve_dependencies
 from fastapi.utils import is_body_allowed_for_status_code
-from fastapi._compat import ModelField, _normalize_errors  # pyright: ignore[reportPrivateUsage]
 from fastapi.datastructures import Default, DefaultPlaceholder
 
 from .inject import inject
 from fundi.types import CallableInfo
 
-from .alias import resolve_aliases
 from .validate_request_body import validate_body
 
 
 def get_request_handler(
     ci: CallableInfo[typing.Any],
-    scope_dependant: Dependant,
     extra_dependencies: list[CallableInfo[typing.Any]],
     scope_aliases: dict[type, set[str]],
     body_field: ModelField | None = None,
@@ -51,37 +46,38 @@ def get_request_handler(
         # Close exit stack at after the response is sent
         background_tasks.add_task(stack.aclose)
 
+        response = Response()
+        del response.headers["content-length"]
+        response.status_code = None  # pyright: ignore[reportAttributeAccessIssue]
+
         body_stack = AsyncExitStack()
         async with body_stack:
             body = await validate_body(request, body_stack, body_field)
 
-            scope = await solve_dependencies(
-                request=request,
-                dependant=scope_dependant,
-                body=body,
-                dependency_overrides_provider=dependency_overrides_provider,
-                async_exit_stack=stack,
-                embed_body_fields=embed_body_fields,
-                background_tasks=background_tasks,
-            )
-
-            if scope.errors:
-                raise RequestValidationError(_normalize_errors(scope.errors), body=body)
-
-            values = {
-                **scope.values,
-                **resolve_aliases(
-                    scope_aliases,
-                    request,
-                    background_tasks,
-                    scope.response,
-                ),
-            }
-
             for dependency in extra_dependencies:
-                await inject(values, dependency, stack)
+                await inject(
+                    dependency,
+                    stack,
+                    request,
+                    body,
+                    dependency_overrides_provider,
+                    embed_body_fields,
+                    background_tasks,
+                    scope_aliases,
+                    response,
+                )
 
-            raw_response = await inject(values, ci, stack)
+            raw_response = await inject(
+                ci,
+                stack,
+                request,
+                body,
+                dependency_overrides_provider,
+                embed_body_fields,
+                background_tasks,
+                scope_aliases,
+                response,
+            )
 
         if isinstance(raw_response, Response):
             if raw_response.background is None:
@@ -93,7 +89,7 @@ def get_request_handler(
 
         # If status_code was set, use it, otherwise use the default from the
         # response class, in the case of redirect it's 307
-        status = scope.response.status_code or status_code
+        status = response.status_code or status_code
         if status is not None:
             response_args["status_code"] = status
 
@@ -112,7 +108,7 @@ def get_request_handler(
         if not is_body_allowed_for_status_code(response.status_code):
             response.body = b""
 
-        response.headers.raw.extend(scope.response.headers.raw)
+        response.headers.raw.extend(response.headers.raw)
 
         return response
 

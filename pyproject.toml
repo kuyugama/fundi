@@ -21,6 +21,7 @@ docs = [
 ]
 fastapi = [
     "fastapi>=0.116.1",
+    "python-multipart>=0.0.20",
 ]
 dev = [
   "black>=25.1.0",

@@ -193,7 +193,6 @@ class FunDIRoute(APIRoute):
         self.app = request_response(
             get_request_handler(
                 callable_info,
-                self.dependant,
                 extra_dependencies=self.dependencies[::-1],
                 scope_aliases=get_request_related_aliases(callable_info),
                 body_field=self.body_field,
