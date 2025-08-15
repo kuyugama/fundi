@@ -1,6 +1,7 @@
 import typing
 import collections
 import collections.abc
+from typing_extensions import override
 from dataclasses import dataclass, field
 
 __all__ = [
@@ -53,9 +54,19 @@ class CallableInfo(typing.Generic[R]):
     return_annotation: typing.Any
     configuration: "DependencyConfiguration | None"
     named_parameters: dict[str, Parameter] = field(init=False)
+    key: "CacheKey" = field(init=False)
 
     def __post_init__(self):
         self.named_parameters = {p.name: p for p in self.parameters}
+        self.key = CacheKey(self.call)
+
+    @override
+    def __hash__(self) -> int:
+        return hash(self.key)
+
+    @override
+    def __eq__(self, value: object) -> bool:
+        return hash(self.key) == hash(value)
 
     def _build_values(
         self,
@@ -134,6 +145,35 @@ class CallableInfo(typing.Generic[R]):
                 positional += (value,)
 
         return positional, keyword
+
+
+class CacheKey:
+    __slots__: tuple[str, ...] = ("_hash", "_items")
+
+    def __init__(self, *initial_items: collections.abc.Hashable):
+        self._hash: int | None = None
+        self._items: list[collections.abc.Hashable] = list(initial_items)
+
+    def add(self, *items: collections.abc.Hashable):
+        self._items.extend(items)
+        self._hash = None
+
+    @override
+    def __hash__(self) -> int:
+        if self._hash is not None:
+            return self._hash
+
+        self._hash = hash(tuple(self._items))
+
+        return self._hash
+
+    @override
+    def __eq__(self, value: typing.Hashable) -> bool:
+        return self._hash == hash(value)
+
+    @override
+    def __repr__(self) -> str:
+        return f"#{hash(self)}"
 
 
 @dataclass

@@ -2,12 +2,12 @@ import typing
 import collections.abc
 
 from fundi.util import normalize_annotation
-from fundi.types import CallableInfo, ParameterResult, Parameter
+from fundi.types import CacheKey, CallableInfo, ParameterResult, Parameter
 
 
 def resolve_by_dependency(
     param: Parameter,
-    cache: collections.abc.Mapping[typing.Callable[..., typing.Any], typing.Any],
+    cache: collections.abc.Mapping[CacheKey, typing.Any],
     override: collections.abc.Mapping[typing.Callable[..., typing.Any], typing.Any],
 ) -> ParameterResult:
     dependency = param.from_
@@ -23,8 +23,8 @@ def resolve_by_dependency(
 
         return ParameterResult(param, value, dependency, resolved=True)
 
-    if dependency.use_cache and dependency.call in cache:
-        return ParameterResult(param, cache[dependency.call], dependency, resolved=True)
+    if dependency.use_cache and dependency.key in cache:
+        return ParameterResult(param, cache[dependency.key], dependency, resolved=True)
 
     return ParameterResult(param, None, dependency, resolved=False)
 
@@ -46,7 +46,7 @@ def resolve_by_type(
 def resolve(
     scope: collections.abc.Mapping[str, typing.Any],
     info: CallableInfo[typing.Any],
-    cache: collections.abc.Mapping[typing.Callable[..., typing.Any], typing.Any],
+    cache: collections.abc.Mapping[CacheKey, typing.Any],
     override: collections.abc.Mapping[typing.Callable[..., typing.Any], typing.Any] | None = None,
 ) -> collections.abc.Generator[ParameterResult, None, None]:
     """
