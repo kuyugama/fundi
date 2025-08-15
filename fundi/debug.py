@@ -1,18 +1,15 @@
 import typing
 import collections.abc
 
-from fundi.types import CallableInfo
 from fundi.inject import injection_impl
+from fundi.types import CacheKey, CallableInfo
 
 
 def tree(
     scope: collections.abc.Mapping[str, typing.Any],
     info: CallableInfo[typing.Any],
     cache: (
-        collections.abc.MutableMapping[
-            typing.Callable[..., typing.Any], collections.abc.Mapping[str, typing.Any]
-        ]
-        | None
+        collections.abc.MutableMapping[CacheKey, collections.abc.Mapping[str, typing.Any]] | None
     ) = None,
 ) -> collections.abc.Mapping[str, typing.Any]:
     """
@@ -42,10 +39,7 @@ def order(
     scope: collections.abc.Mapping[str, typing.Any],
     info: CallableInfo[typing.Any],
     cache: (
-        collections.abc.MutableMapping[
-            typing.Callable[..., typing.Any], list[typing.Callable[..., typing.Any]]
-        ]
-        | None
+        collections.abc.MutableMapping[CacheKey, list[typing.Callable[..., typing.Any]]] | None
     ) = None,
 ) -> list[typing.Callable[..., typing.Any]]:
     """
