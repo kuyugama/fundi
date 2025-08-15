@@ -3,14 +3,14 @@ import contextlib
 import collections.abc
 
 from fundi.resolve import resolve
-from fundi.types import CallableInfo
+from fundi.types import CacheKey, CallableInfo
 from fundi.util import call_sync, call_async, add_injection_trace
 
 
 def injection_impl(
     scope: collections.abc.Mapping[str, typing.Any],
     info: CallableInfo[typing.Any],
-    cache: collections.abc.MutableMapping[typing.Callable[..., typing.Any], typing.Any],
+    cache: collections.abc.MutableMapping[CacheKey, typing.Any],
     override: collections.abc.Mapping[typing.Callable[..., typing.Any], typing.Any] | None,
 ) -> collections.abc.Generator[
     tuple[collections.abc.Mapping[str, typing.Any], CallableInfo[typing.Any], bool],
@@ -46,7 +46,7 @@ def injection_impl(
                 value = yield {**scope, "__fundi_parameter__": result.parameter}, dependency, True
 
                 if dependency.use_cache:
-                    cache[dependency.call] = value
+                    cache[dependency.key] = value
 
             values[name] = value
 
@@ -61,9 +61,7 @@ def inject(
     scope: collections.abc.Mapping[str, typing.Any],
     info: CallableInfo[typing.Any],
     stack: contextlib.ExitStack,
-    cache: (
-        collections.abc.MutableMapping[typing.Callable[..., typing.Any], typing.Any] | None
-    ) = None,
+    cache: collections.abc.MutableMapping[CacheKey, typing.Any] | None = None,
     override: collections.abc.Mapping[typing.Callable[..., typing.Any], typing.Any] | None = None,
 ) -> typing.Any:
     """
@@ -106,9 +104,7 @@ async def ainject(
     scope: collections.abc.Mapping[str, typing.Any],
     info: CallableInfo[typing.Any],
     stack: contextlib.AsyncExitStack,
-    cache: (
-        collections.abc.MutableMapping[typing.Callable[..., typing.Any], typing.Any] | None
-    ) = None,
+    cache: collections.abc.MutableMapping[CacheKey, typing.Any] | None = None,
     override: collections.abc.Mapping[typing.Callable[..., typing.Any], typing.Any] | None = None,
 ) -> typing.Any:
     """
