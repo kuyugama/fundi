@@ -16,35 +16,28 @@ from .scan import scan
 from .types import CallableInfo
 from .exceptions import GeneratorExitedTooEarly
 
-__all__ = ["VirtualContextManager", "AsyncVirtualContextManager", "virtual_context"]
+__all__ = ["VirtualContextProvider", "AsyncVirtualContextProvider", "virtual_context"]
 
 T = typing.TypeVar("T")
 P = typing.ParamSpec("P")
 F = typing.TypeVar("F", bound=types.FunctionType)
 
 
-class VirtualContextManager(typing.Generic[T, P], AbstractContextManager[T]):
+@typing.final
+class _VirtualContextManager(typing.Generic[T], AbstractContextManager[T]):
     """
-    Synchronous virtual context manager
+    Virtual context manager implementation
     """
 
-    def __init__(self, function: typing.Callable[P, Generator[T, None, None]]):
-        info = replace(scan(function), generator=False, context=True, call=self)
-        self.__fundi_info__: CallableInfo[typing.Any] = info
-
-        self.__wrapped__: typing.Callable[P, Generator[T, None, None]] = function
-        self.generator: Generator[T, None, None] | None = None
-
-    def __call__(self, *args: P.args, **kwargs: P.kwargs):
-        self.generator = self.__wrapped__(*args, **kwargs)
-        return self
+    def __init__(self, generator: Generator[T, None, None], origin: types.FunctionType) -> None:
+        self.generator = generator
+        self.origin = origin
 
     def __enter__(self) -> T:  # pyright: ignore[reportMissingSuperCall, reportImplicitOverride]
-        assert self.generator is not None, "Generator not initialized, call __call__ method first"
         try:
             return self.generator.send(None)
         except StopIteration as exc:
-            raise GeneratorExitedTooEarly(self.__wrapped__, self.generator) from exc
+            raise GeneratorExitedTooEarly(self.origin, self.generator) from exc
 
     def __exit__(  # pyright: ignore[reportImplicitOverride]
         self,
@@ -52,8 +45,6 @@ class VirtualContextManager(typing.Generic[T, P], AbstractContextManager[T]):
         exc_value: BaseException | None,
         traceback: types.TracebackType | None,
     ) -> bool:
-        assert self.generator is not None, "Generator not initialized, call __call__ method first"
-
         try:
             if exc_type is not None:
                 self.generator.throw(exc_type, exc_value, traceback)
@@ -71,28 +62,21 @@ class VirtualContextManager(typing.Generic[T, P], AbstractContextManager[T]):
         return False
 
 
-class AsyncVirtualContextManager(typing.Generic[T, P], AbstractAsyncContextManager[T]):
+@typing.final
+class _VirtualAsyncContextManager(typing.Generic[T], AbstractAsyncContextManager[T]):
     """
-    Asynchronous virtual context manager
+    Virtual context manager implementation
     """
 
-    def __init__(self, function: typing.Callable[P, AsyncGenerator[T]]):
-        info = replace(scan(function), generator=False, context=True, call=self)
-        self.__fundi_info__: CallableInfo[typing.Any] = info
-
-        self.__wrapped__: typing.Callable[P, AsyncGenerator[T]] = function
-        self.generator: AsyncGenerator[T] | None = None
-
-    def __call__(self, *args: P.args, **kwargs: P.kwargs):
-        self.generator = self.__wrapped__(*args, **kwargs)
-        return self
+    def __init__(self, generator: AsyncGenerator[T, None], origin: types.FunctionType) -> None:
+        self.generator = generator
+        self.origin = origin
 
     async def __aenter__(self) -> T:  # pyright: ignore[reportImplicitOverride]
-        assert self.generator is not None, "Generator not initialized, call __call__ method first"
         try:
             return await self.generator.asend(None)
         except StopAsyncIteration as exc:
-            raise GeneratorExitedTooEarly(self.__wrapped__, self.generator) from exc
+            raise GeneratorExitedTooEarly(self.origin, self.generator) from exc
 
     async def __aexit__(  # pyright: ignore[reportImplicitOverride]
         self,
@@ -119,17 +103,47 @@ class AsyncVirtualContextManager(typing.Generic[T, P], AbstractAsyncContextManag
         return False
 
 
+class VirtualContextProvider(typing.Generic[T, P]):
+    """
+    Synchronous virtual context manager
+    """
+
+    def __init__(self, function: typing.Callable[P, Generator[T, None, None]]):
+        info = replace(scan(function), generator=False, context=True, call=self)
+        self.__fundi_info__: CallableInfo[typing.Any] = info
+
+        self.__wrapped__: typing.Callable[P, Generator[T, None, None]] = function
+
+    def __call__(self, *args: P.args, **kwargs: P.kwargs):
+        return _VirtualContextManager(self.__wrapped__(*args, **kwargs), self.__wrapped__)
+
+
+class AsyncVirtualContextProvider(typing.Generic[T, P]):
+    """
+    Asynchronous virtual context manager
+    """
+
+    def __init__(self, function: typing.Callable[P, AsyncGenerator[T]]):
+        info = replace(scan(function), generator=False, context=True, call=self)
+        self.__fundi_info__: CallableInfo[typing.Any] = info
+
+        self.__wrapped__: typing.Callable[P, AsyncGenerator[T]] = function
+
+    def __call__(self, *args: P.args, **kwargs: P.kwargs):
+        return _VirtualAsyncContextManager(self.__wrapped__(*args, **kwargs), self.__wrapped__)
+
+
 @typing.overload
 def virtual_context(
     function: typing.Callable[P, Generator[T, None, None]],
-) -> VirtualContextManager[T, P]: ...
+) -> VirtualContextProvider[T, P]: ...
 @typing.overload
 def virtual_context(
     function: typing.Callable[P, AsyncGenerator[T]],
-) -> AsyncVirtualContextManager[T, P]: ...
+) -> AsyncVirtualContextProvider[T, P]: ...
 def virtual_context(
     function: typing.Callable[P, Generator[T, None, None] | AsyncGenerator[T]],
-) -> VirtualContextManager[T, P] | AsyncVirtualContextManager[T, P]:
+) -> VirtualContextProvider[T, P] | AsyncVirtualContextProvider[T, P]:
     """
     Define virtual context manager using decorator
 
@@ -163,9 +177,9 @@ def virtual_context(
             await socket.send("wtf")
     """
     if inspect.isasyncgenfunction(function):
-        return AsyncVirtualContextManager(function)
+        return AsyncVirtualContextProvider(function)
     elif inspect.isgeneratorfunction(function):
-        return VirtualContextManager(function)
+        return VirtualContextProvider(function)
 
     raise ValueError(
         f"@virtual_context expects a generator or async generator function, got {function!r}"
